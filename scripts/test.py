@@ -30,7 +30,9 @@ def main() -> None:
         atom_ids_test,
         som_labels_test,
         descriptors_test,
-    ) = descriptors_generator.compute_FAME_descriptors(args.input_file, has_soms=True)
+    ) = descriptors_generator.compute_FAME_descriptors(
+        args.input_file, args.out_folder, has_soms=True
+    )
 
     print(f"Testing data: {len(set(mol_ids_test))} molecules")
 
@@ -38,7 +40,7 @@ def main() -> None:
     clf = load(args.model_file)
 
     print(f"Testing model...")
-    predictions = clf.predict_proba(descriptors_test)[:,1]
+    predictions = clf.predict_proba(descriptors_test)[:, 1]
     predictions_binary = (predictions > THRESHOLD).astype(int)
 
     (
@@ -47,7 +49,9 @@ def main() -> None:
         recall,
         auroc,
         top2_success_rate,
-    ) = PerformanceMetrics.compute_metrics(som_labels_test, predictions, predictions_binary, mol_ids_test)
+    ) = PerformanceMetrics.compute_metrics(
+        som_labels_test, predictions, predictions_binary, mol_ids_test
+    )
 
     metrics_file = os.path.join(args.out_folder, "metrics.txt")
     with open(metrics_file, "w") as file:

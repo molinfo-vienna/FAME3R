@@ -1,10 +1,12 @@
 import ast
-import numpy as np
-import pandas as pd
+import os
 import sys
-
 import warnings
 
+import numpy as np
+import pandas as pd
+
+# Suppress pandas performance warning
 warnings.simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
 
 import CDPL.Chem as Chem
@@ -17,7 +19,7 @@ import CDPL.ForceField as ForceField
 # when using .sdf, the columns should have mol_id, site of metabolism labeled as a list of atom index in "soms"
 # when using smiles, the columns should be mol_id, preprocessed_smi
 
-sybyl_atom_type_idx_cpdkit = [
+SYBYL_ATOM_TYPE_IDX_CDPKIT = [
     1,
     2,
     3,
@@ -47,103 +49,58 @@ sybyl_atom_type_idx_cpdkit = [
 ]
 
 
-class FAMEDescriptors:
-    def __init__(self, radius):
-        self.radius = radius
-
-    def _perceive_mol(self, mol: Chem.Molecule) -> None:
-        Chem.calcImplicitHydrogenCounts(
-            mol, False
-        )  # calculate implicit hydrogen counts and set corresponding property for all atoms
-        Chem.perceiveHybridizationStates(
-            mol, False
-        )  # perceive atom hybridization states and set corresponding property for all atoms
-        Chem.perceiveSSSR(
-            mol, False
-        )  # perceive smallest set of smallest rings and store as Chem.MolecularGraph property
-        Chem.setRingFlags(
-            mol, False
-        )  # perceive cycles and set corresponding atom and bond properties
-        Chem.setAromaticityFlags(
-            mol, False
-        )  # perceive aromaticity and set corresponding atom and bond properties
-        Chem.perceiveSybylAtomTypes(
-            mol, False
-        )  # perceive Sybyl atom types and set corresponding property for all atoms
-        Chem.calcTopologicalDistanceMatrix(
-            mol, False
-        )  # calculate topological distance matrix and store as Chem.MolecularGraph property
-        # (required for effective polarizability calculations)
-        Chem.perceivePiElectronSystems(
-            mol, False
-        )  # perceive pi electron systems and store info as Chem.MolecularGraph property
-        # (required for MHMO calculations)
+class MoleculeProcessor:
+    @staticmethod
+    def perceive_mol(mol: Chem.Molecule) -> None:
+        """Perceive various molecular properties and set corresponding attributes."""
+        Chem.calcImplicitHydrogenCounts(mol, False)
+        Chem.perceiveHybridizationStates(mol, False)
+        Chem.perceiveSSSR(mol, False)
+        Chem.setRingFlags(mol, False)
+        Chem.setAromaticityFlags(mol, False)
+        Chem.perceiveSybylAtomTypes(mol, False)
+        Chem.calcTopologicalDistanceMatrix(mol, False)
+        Chem.perceivePiElectronSystems(mol, False)
 
         MolProp.calcPEOEProperties(mol, False)
-        # calculate sigma charges and electronegativities
-        # using the PEOE method and store values as atom properties
-        # (prerequisite for MHMO calculations)
-
         MolProp.calcMHMOProperties(mol, False)
-        # calculate pi charges, electronegativities and other properties
-        # by a modified Hueckel MO method and store values as properties
 
-        ForceField.perceiveMMFF94AromaticRings(
-            mol, False
-        )  # perceive aromatic rings according to the MMFF94 aroamticity model and store data as Chem.MolecularGraph property
-        ForceField.assignMMFF94AtomTypes(
-            mol, False, False
-        )  # perceive MMFF94 atom types (tolerant mode) set corresponding property for all atoms
-        ForceField.assignMMFF94BondTypeIndices(
-            mol, False, False
-        )  # perceive MMFF94 bond types (tolerant mode) set corresponding property for all bonds
-        ForceField.calcMMFF94AtomCharges(
-            mol, False, False
-        )  # calculate MMFF94 atom charges (tolerant mode) set corresponding property for all atoms
+        ForceField.perceiveMMFF94AromaticRings(mol, False)
+        ForceField.assignMMFF94AtomTypes(mol, False, False)
+        ForceField.assignMMFF94BondTypeIndices(mol, False, False)
+        ForceField.calcMMFF94AtomCharges(mol, False, False)
 
-    def _process_molecule(self, mol: Chem.Molecule, has_soms: bool) -> None:
-        if not Chem.hasStructureData(mol):
-            print(
-                "Error: structure data not available for molecule '%s'!"
-                % Chem.getName(mol)
-            )
-            return
-
+    @staticmethod
+    def extract_structure_data(mol: Chem.Molecule) -> dict:
+        """Extract structure data from a molecule."""
         struct_data = Chem.getStructureData(mol)
+        data_dict = {}
 
         for entry in struct_data:
             if "mol_id" in entry.header:
-                mol_id = entry.data
+                data_dict["mol_id"] = entry.data
             if "soms" in entry.header:
-                soms = ast.literal_eval(entry.data)
+                data_dict["soms"] = ast.literal_eval(entry.data)
 
-        self._perceive_mol(mol)
+        return data_dict
 
-        property_dict = {}
-        for atom in mol.atoms:
-            if Chem.getSybylType(atom) == 24:
-                continue  # remove hydrogen this way to not mess up the atom index with SoMs
 
-            atom_id = mol.getAtomIndex(atom)
-            descriptor_names, descriptors = self._generate_FAME_descriptors(
-                atom, mol, self.radius
-            )
+class DescriptorGenerator:
+    def __init__(self, radius):
+        self.radius = radius
 
-            if has_soms:
-                if atom_id in soms:
-                    som_label = 1
-                else:
-                    som_label = 0
-            else:
-                som_label = None
-
-            property_dict[(mol_id, atom_id)] = (som_label, descriptors)
-
-        return descriptor_names, property_dict
-
-    def _generate_FAME_descriptors(
-        self, ctr_atom: Chem.Atom, molgraph: Chem.MolecularGraph, radius: int
+    def generate_descriptors(
+        self, ctr_atom: Chem.Atom, molgraph: Chem.MolecularGraph
     ) -> tuple:
+        """Generate descriptors for a given atom in a molecule.
+
+        Args:
+            ctr_atom (Chem.Atom):
+            molgraph (Chem.MolecularGraph):
+
+        Returns:
+            tuple: (descriptor_names, descriptors)
+        """
         properties_dict = {
             Chem.getSybylType: "AtomType",
             MolProp.getHeavyAtomCount: "AtomDegree",
@@ -158,126 +115,70 @@ class FAMEDescriptors:
             MolProp.calcInductiveEffect: "InductiveEffect",
         }
 
-        # Sybyl atom types to keep
-        sybyl_atom_type_idx_cpdkit = [
-            1,
-            2,
-            3,
-            4,
-            6,
-            7,
-            8,
-            9,
-            10,
-            11,
-            12,
-            13,
-            14,
-            15,
-            18,
-            19,
-            20,
-            21,
-            22,
-            23,
-            38,
-            47,
-            48,
-            49,
-            54,
-        ]
-
-        (fs, names) = zip(*properties_dict.items())
+        fs, names = zip(*properties_dict.items())
         descriptor_names = [
-            prefix + "_" + Chem.getSybylAtomTypeString(i) + "_" + str(j)
+            f"{prefix}_{Chem.getSybylAtomTypeString(i)}_{j}"
             for prefix in names
-            for j in range(radius + 1)
-            for i in sybyl_atom_type_idx_cpdkit
+            for j in range(self.radius + 1)
+            for i in SYBYL_ATOM_TYPE_IDX_CDPKIT
         ]
         descr = np.zeros(
-            (len(properties_dict), len(sybyl_atom_type_idx_cpdkit) * (radius + 1)),
+            (len(properties_dict), len(SYBYL_ATOM_TYPE_IDX_CDPKIT) * (self.radius + 1)),
             dtype=float,
         )
 
-        env = Chem.Fragment()  # for storing of extracted environment atoms
+        env = Chem.Fragment()
+        Chem.getEnvironment(ctr_atom, molgraph, self.radius, env)
 
-        Chem.getEnvironment(
-            ctr_atom, molgraph, radius, env
-        )  # extract environment of center atom reaching out up to 'radius' bonds
-        for atom in env.atoms:  # iterate over extracted environment atoms
-            sybyl_type = Chem.getSybylType(
-                atom
-            )  # retrieve Sybyl type of environment atom
-            if sybyl_type not in sybyl_atom_type_idx_cpdkit:
+        for atom in env.atoms:
+            sybyl_type = Chem.getSybylType(atom)
+            if sybyl_type not in SYBYL_ATOM_TYPE_IDX_CDPKIT:
                 continue
 
-            for c, t in zip(
-                range(len(sybyl_atom_type_idx_cpdkit)), sybyl_atom_type_idx_cpdkit
-            ):
-                if sybyl_type == t:
-                    position = c
+            position = SYBYL_ATOM_TYPE_IDX_CDPKIT.index(sybyl_type)
+            top_dist = Chem.getTopologicalDistance(ctr_atom, atom, molgraph)
+            descr[0, (top_dist * len(SYBYL_ATOM_TYPE_IDX_CDPKIT) + position)] += 1
 
-            top_dist = Chem.getTopologicalDistance(
-                ctr_atom, atom, molgraph
-            )  # get top. distance between center atom and environment atom
-            descr[
-                0, (top_dist * len(sybyl_atom_type_idx_cpdkit) + position)
-            ] += 1  # instead of 1 (= Sybyl type presence) also any other numeric atom
-
-            # for properties
             for i, f_, name in zip(range(len(fs)), fs, names):
                 if name == "AtomType":
                     continue
-                if name in ["SigmaCharge", "MMFF94Charge", "SigmaElectronegativity"]:
-                    prop = f_(atom)
-                else:
-                    prop = f_(atom, molgraph)
+                prop = (
+                    f_(atom)
+                    if name in ["SigmaCharge", "MMFF94Charge", "SigmaElectronegativity"]
+                    else f_(atom, molgraph)
+                )
                 descr[
-                    (i, (top_dist * len(sybyl_atom_type_idx_cpdkit) + position))
-                ] += prop  # sum up property
+                    i, (top_dist * len(SYBYL_ATOM_TYPE_IDX_CDPKIT) + position)
+                ] += prop
 
-        for i in range(len(fs) - 1):
-            descr[i + 1, :] = np.divide(
-                descr[i + 1, :],
+        for i in range(1, len(fs)):
+            # averaging property and when divide by 0 give 0
+            descr[i, :] = np.divide(
+                descr[i, :],
                 descr[0, :],
-                out=np.zeros_like(descr[i + 1, :]),
+                out=np.zeros_like(descr[i, :]),
                 where=descr[0, :] != 0,
-            )  # averaging property and when divide by 0 give 0
+            )
 
-        # calculate max_top_dist, the longest distance in a molecules, independent from atoms
-        max_top_dist = 0
-        for atom1 in molgraph.atoms:
-            for atom2 in molgraph.atoms:
-                distance = Chem.getTopologicalDistance(atom1, atom2, molgraph)
-                if distance > max_top_dist:
-                    max_top_dist = distance
-
-        # calculate max_distance_center, the longest distance between this center atom and other
-        max_distance_center = 0
-        for atom in molgraph.atoms:
-            distance = Chem.getTopologicalDistance(ctr_atom, atom, molgraph)
-            if distance > max_distance_center:
-                max_distance_center = distance
-
-        # add the 4 descriptors related to topological distance
-        descriptor_names = np.append(
-            descriptor_names,
-            [
-                "longestMaxTopDistinMolecule",
-                "highestMaxTopDistinMatrixRow",
-                "diffSPAN",
-                "refSPAN",
-            ],
+        max_top_dist, max_distance_center = self._calculate_distances(
+            molgraph, ctr_atom
         )
+        descriptor_names += [
+            "longestMaxTopDistinMolecule",
+            "highestMaxTopDistinMatrixRow",
+            "diffSPAN",
+            "refSPAN",
+        ]
         descr = descr.flatten()
-        if max_top_dist == 0:  # had compound with one heavy atom, lazy solution now
+
+        if max_top_dist == 0:
             descr = np.append(
                 descr,
                 [
                     max_top_dist,
                     max_distance_center,
                     max_top_dist - max_distance_center,
-                    0 / 1,
+                    0,
                 ],
             )
         else:
@@ -294,59 +195,165 @@ class FAMEDescriptors:
         descr = descr.round(4)
         return descriptor_names, descr
 
-    def compute_FAME_descriptors(self, in_file: str, has_soms: bool) -> tuple:
+    def _calculate_distances(
+        self, molgraph: Chem.MolecularGraph, ctr_atom: Chem.Atom
+    ) -> tuple:
+        """Caclulate the maximum topological distance across the whole molecule and the maximum distance from the center atom.
+        Args:
+            molgraph (Chem.MolecularGraph):
+            ctr_atom (Chem.Atom):
+
+        Returns:
+            tuple: (max_top_dist, max_distance_center)
+        """
+        max_top_dist = max(
+            Chem.getTopologicalDistance(atom1, atom2, molgraph)
+            for atom1 in molgraph.atoms
+            for atom2 in molgraph.atoms
+        )
+        max_distance_center = max(
+            Chem.getTopologicalDistance(ctr_atom, atom, molgraph)
+            for atom in molgraph.atoms
+        )
+        return max_top_dist, max_distance_center
+
+
+class FAMEDescriptors:
+    def __init__(self, radius):
+        self.radius = radius
+        self.descriptor_generator = DescriptorGenerator(radius)
+
+    def _process_molecule(self, mol: Chem.Molecule, has_soms: bool) -> tuple:
+        """Process a molecule and generate descriptors for each atom.
+
+        Args:
+            mol (Chem.Molecule):
+            has_soms (bool): Whether the input file contains site of metabolism labels.
+
+        Returns:
+            tuple: (descriptor_names, property_dict)
+        """
+        data_dict = MoleculeProcessor.extract_structure_data(mol)
+        mol_id = data_dict.get("mol_id")
+        soms = data_dict.get("soms", [])
+
+        MoleculeProcessor.perceive_mol(mol)
+        property_dict = {}
+
+        for atom in mol.atoms:
+            if Chem.getSybylType(atom) == 24:
+                continue  # Skip hydrogen atoms
+
+            atom_id = mol.getAtomIndex(atom)
+            (
+                descriptor_names,
+                descriptors,
+            ) = self.descriptor_generator.generate_descriptors(atom, mol)
+            som_label = 1 if has_soms and atom_id in soms else 0 if has_soms else None
+            property_dict[(mol_id, atom_id)] = (som_label, descriptors)
+
+        return descriptor_names, property_dict
+
+    def compute_FAME_descriptors(
+        self, in_file: str, out_folder: str, has_soms: bool
+    ) -> tuple:
+        """Compute FAME descriptors for a given molecule.
+
+        Args:
+            in_file (str): Input file path.
+            out_folder (str): Output folder path.
+            has_soms (bool): Whether the input file contains site of metabolism labels.
+
+        Returns:
+            tuple: (mol_ids, atom_ids, som_labels, descriptors_lst)
+        """
         reader = Chem.FileSDFMoleculeReader(in_file)
         mol = Chem.BasicMolecule()
 
-        mol_ids = []
-        atom_ids = []
-        som_labels = []
-        descriptors_lst = []
+        mol_ids, atom_ids, som_labels, descriptors_lst = [], [], [], []
 
-        # read and process molecules one after the other until the end of input has been reached
-        try:
-            while reader.read(mol):
+        out_not_calculated_cpds = f"{out_folder}/{os.path.splitext(os.path.basename(in_file))[0]}_{self.radius}_not_calculated_cpds.csv"
+        out_descriptors = f"{out_folder}/{os.path.splitext(os.path.basename(in_file))[0]}_{self.radius}_descriptors.csv"
+
+        if not os.path.exists(out_not_calculated_cpds) and not os.path.exists(
+            out_descriptors
+        ):
+            with open(out_not_calculated_cpds, "w") as f_not_calc, open(
+                out_descriptors, "w"
+            ) as f_desc:
+                f_not_calc.write("sybyl_atom_type_id,sybyl_atom_type,mol_id\n")
+
+                i = 0
                 try:
-                    self._perceive_mol(mol)
-                    uncommon_element = 0
-                    for atom in mol.atoms:
-                        atom_type = Chem.getSybylType(atom)
-                        if atom_type not in sybyl_atom_type_idx_cpdkit:
-                            uncommon_element = True
+                    while reader.read(mol):
+                        try:
+                            MoleculeProcessor.perceive_mol(mol)
+                            uncommon_element = False
+                            for atom in mol.atoms:
+                                atom_type = Chem.getSybylType(atom)
+                                if atom_type not in SYBYL_ATOM_TYPE_IDX_CDPKIT:
+                                    f_not_calc.write(
+                                        f"{atom_type},{Chem.getSybylAtomTypeString(atom_type)},X\n"
+                                    )
+                                    uncommon_element = True
 
-                    if uncommon_element:
-                        continue
+                            if uncommon_element:
+                                continue
 
-                    else:
-                        descriptor_names, property_dict = self._process_molecule(
-                            mol, has_soms
-                        )
+                            descriptor_names, property_dict = self._process_molecule(
+                                mol, has_soms
+                            )
 
-                        for key, value in property_dict.items():
-                            som_label, descriptors = value
-                            mol_id, atom_id = key
+                            if i == 0:
+                                f_desc.write(
+                                    "som_label,mol_id,atom_id,"
+                                    + ",".join(descriptor_names)
+                                    + "\n"
+                                )
+                            i += 1
 
-                            mol_ids.append(mol_id)
-                            atom_ids.append(atom_id)
-                            som_labels.append(som_label)
-                            descriptors_lst.append(list(descriptors))
+                            for (mol_id, atom_id), (
+                                som_label,
+                                descriptors,
+                            ) in property_dict.items():
+                                mol_ids.append(mol_id)
+                                atom_ids.append(atom_id)
+                                som_labels.append(som_label)
+                                descriptors_lst.append(list(descriptors))
+
+                                f_desc.write(
+                                    f"{som_label},{mol_id},{atom_id},"
+                                    + ",".join(map(str, descriptors))
+                                    + "\n"
+                                )
+
+                        except Exception as e:
+                            sys.exit(f"Error: processing of molecule failed:\n{e}")
 
                 except Exception as e:
-                    sys.exit("Error: processing of molecule failed:\n" + str(e))
+                    sys.exit(f"Error: reading molecule failed:\n{e}")
 
-        except Exception as e:
-            sys.exit("Error: reading molecule failed:\n" + str(e))
+        else:
+            print(f"Reading pre-calculated descriptors from {out_descriptors}")
+            with open(out_descriptors, "r") as f:
+                next(f)
+                for line in f:
+                    parts = line.strip().split(",")
+                    som_label, mol_id, atom_id = map(int, parts[:3])
+                    descriptors = list(map(float, parts[3:]))
+                    mol_ids.append(mol_id)
+                    atom_ids.append(atom_id)
+                    som_labels.append(som_label)
+                    descriptors_lst.append(descriptors)
 
         if has_soms:
-
             return (
                 np.array(mol_ids, dtype=int),
                 np.array(atom_ids, dtype=int),
                 np.array(som_labels, dtype=int),
                 np.array(descriptors_lst, dtype=float),
             )
-
-        else: 
+        else:
             return (
                 np.array(mol_ids, dtype=int),
                 np.array(atom_ids, dtype=int),

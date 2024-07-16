@@ -32,13 +32,17 @@ def main() -> None:
         atom_ids_train,
         som_labels_train,
         descriptors_train,
-    ) = descriptors_generator.compute_FAME_descriptors(args.train_file, has_soms=True)
+    ) = descriptors_generator.compute_FAME_descriptors(
+        args.train_file, args.out_folder, has_soms=True
+    )
     (
         mol_ids_test,
         atom_ids_test,
         som_labels_test,
         descriptors_test,
-    ) = descriptors_generator.compute_FAME_descriptors(args.test_file, has_soms=True)
+    ) = descriptors_generator.compute_FAME_descriptors(
+        args.test_file, args.out_folder, has_soms=True
+    )
 
     print(f"Training data: {len(set(mol_ids_train))} molecules")
     print(f"Testing data: {len(set(mol_ids_test))} molecules")
@@ -53,7 +57,7 @@ def main() -> None:
     dump(clf, os.path.join(args.out_folder, "model.joblib"))
 
     print(f"Testing model...")
-    predictions = clf.predict_proba(descriptors_test)[:,1]
+    predictions = clf.predict_proba(descriptors_test)[:, 1]
     predictions_binary = (predictions > THRESHOLD).astype(int)
 
     (
@@ -62,7 +66,9 @@ def main() -> None:
         recall,
         auroc,
         top2_success_rate,
-    ) = PerformanceMetrics.compute_metrics(som_labels_test, predictions, predictions_binary, mol_ids_test)
+    ) = PerformanceMetrics.compute_metrics(
+        som_labels_test, predictions, predictions_binary, mol_ids_test
+    )
 
     metrics_file = os.path.join(args.out_folder, "metrics.txt")
     with open(metrics_file, "w") as file:

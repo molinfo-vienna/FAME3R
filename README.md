@@ -24,3 +24,15 @@ A re-implementation of the FAME.AL project.
 ```pip install -e .```
 
 ### Usage
+
+#### Training and evaluating a model
+
+```python scripts/train.py -tr TRAIN_FILE -te TEST_FILE -o OUTPUT_FOLDER -r RADIUS[OPTIONAL, DEFAULT=5]```
+
+#### Applying a trained model on some test data
+
+```python scripts/test.py -i INPUT_FILE -m MODEL_FILE -o OUTPUT_FOLDER -r RADIUS[OPTIONAL, DEFAULT=5]```
+
+#### Computing the SoMs of some data that is without experimentally confirmed SoMs
+
+```python scripts/infer.py -i INPUT_FILE -m MODEL_FILE -o OUTPUT_FOLDER -r RADIUS[OPTIONAL, DEFAULT=5]```

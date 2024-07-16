@@ -11,7 +11,11 @@ from sklearn.metrics import (
 class PerformanceMetrics:
     @classmethod
     def compute_metrics(
-        cls, y_true: np.ndarray, y_pred: np.ndarray, y_pred_binary: np.ndarray, mol_id: np.ndarray
+        cls,
+        y_true: np.ndarray,
+        y_pred: np.ndarray,
+        y_pred_binary: np.ndarray,
+        mol_id: np.ndarray,
     ) -> tuple[float, float, float, float, float]:
         mcc = matthews_corrcoef(y_true, y_pred_binary)
         precision = precision_score(y_true, y_pred_binary)

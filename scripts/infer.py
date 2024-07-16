@@ -30,7 +30,9 @@ def main() -> None:
         atom_ids_test,
         _,
         descriptors_test,
-    ) = descriptors_generator.compute_FAME_descriptors(args.input_file, has_soms=False)
+    ) = descriptors_generator.compute_FAME_descriptors(
+        args.input_file, args.out_folder, has_soms=False
+    )
 
     print(f"Data: {len(set(mol_ids_test))} molecules")
 
@@ -38,7 +40,7 @@ def main() -> None:
     clf = load(args.model_file)
 
     print(f"Testing model...")
-    predictions = clf.predict_proba(descriptors_test)[:,1]
+    predictions = clf.predict_proba(descriptors_test)[:, 1]
     predictions_binary = (predictions > THRESHOLD).astype(int)
 
     predictions_file = os.path.join(args.out_folder, "predictions.csv")
