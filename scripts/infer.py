@@ -13,8 +13,6 @@ THRESHOLD = 0.3
 
 
 def main() -> None:
-    start_time = datetime.now()
-
     args = parseArgs()
     print(f"Radius: {args.radius}")
 
@@ -52,8 +50,6 @@ def main() -> None:
         ):
             writer.writerow([mol_id, atom_id, prediction, prediction_binary])
     print(f"Predictions saved to {predictions_file}")
-
-    print(f"Finished in {datetime.now() - start_time}")
 
 
 def parseArgs() -> argparse.Namespace:
