@@ -25,9 +25,9 @@ A re-implementation of the FAME.AL project.
 
 ### Usage
 
-#### Training and evaluating a model
+#### Training a model
 
-```python scripts/train.py -tr TRAIN_FILE -te TEST_FILE -o OUTPUT_FOLDER -r RADIUS[OPTIONAL, DEFAULT=5]```
+```python scripts/train.py -i INPUT_FILE -o OUTPUT_FOLDER -r RADIUS[OPTIONAL, DEFAULT=5]```
 
 #### Applying a trained model on some test data
 
