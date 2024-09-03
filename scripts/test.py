@@ -1,16 +1,17 @@
 import argparse
 import csv
+import numpy as np
 import os
 import sys
 
 from datetime import datetime
 from joblib import load
+from statistics import mean, stdev
 
 from fameal import FAMEDescriptors, PerformanceMetrics
 
-
+NUM_BOOTSTRAPS = 100
 THRESHOLD = 0.3
-
 
 def main() -> None:
     args = parseArgs()
@@ -38,39 +39,48 @@ def main() -> None:
     clf = load(args.model_file)
 
     print(f"Testing model...")
-    predictions = clf.predict_proba(descriptors)[:, 1]
-    predictions_binary = (predictions > THRESHOLD).astype(int)
+    y_prob = clf.predict_proba(descriptors)[:, 1]
+    y_pred = (y_prob > THRESHOLD).astype(int)
 
-    (
-        mcc,
-        precision,
-        recall,
-        auroc,
-        top2_success_rate,
-    ) = PerformanceMetrics.compute_metrics(
-        som_labels, predictions, predictions_binary, mol_ids
-    )
+    mccs = []
+    precisions = []
+    recalls = []
+    aurocs = []
+    top2s = []
+    for i in range(NUM_BOOTSTRAPS):
+        print(f"Bootstrap {i + 1}...")
+        # Get a random 50% of the data (by molecular ID so that a substrate is not split across different bootstrap iterations)
+        sampled_mol_ids = np.random.choice(list(set(mol_ids)), int(0.5 * len(set(mol_ids))), replace=False)
+        mask = np.zeros(len(mol_ids), dtype=bool)
+        for id in sampled_mol_ids:
+            mask = mask | (mol_ids == id)
+            mcc, precision, recall, auroc, top2 = PerformanceMetrics.compute_metrics(som_labels[mask], y_prob[mask], y_pred[mask], mol_ids[mask])
+            mccs.append(mcc)
+            precisions.append(precision)
+            recalls.append(recall)
+            aurocs.append(auroc)
+            top2s.append(top2)
 
     metrics_file = os.path.join(args.out_folder, "metrics.txt")
     with open(metrics_file, "w") as file:
-        file.write(f"MCC: {mcc}\n")
-        file.write(f"Precision: {precision}\n")
-        file.write(f"Recall: {recall}\n")
-        file.write(f"AUROC: {auroc}\n")
-        file.write(f"Top-2 Success Rate: {top2_success_rate}\n")
+        file.write(f"MCC: {round(mean(mccs), 4)} +/- {round(stdev(mccs), 4)}\n")
+        file.write(f"Precision: {round(mean(precisions), 4)} +/- {round(stdev(precisions), 4)}\n")
+        file.write(f"Recall: {round(mean(recalls), 4)} +/- {round(stdev(recalls), 4)}\n")
+        file.write(f"AUROC: {round(mean(aurocs), 4)} +/- {round(stdev(aurocs), 4)}\n")
+        file.write(f"Top-2 correctness rate: {round(mean(top2s), 4)} +/- {round(stdev(top2s), 4)}\n")
     print(f"Metrics saved to {metrics_file}")
 
     predictions_file = os.path.join(args.out_folder, "predictions.csv")
     with open(predictions_file, "w", newline="") as file:
         writer = csv.writer(file)
         writer.writerow(
-            ["mol_id", "atom_id", "predictions", "predictions_binary", "true_labels"]
+            ["mol_id", "atom_id", "y_prob", "y_pred", "y_true"]
         )
         for mol_id, atom_id, prediction, prediction_binary, true_label in zip(
             mol_ids,
             atom_ids,
-            predictions,
-            predictions_binary,
+            y_prob,
+            y_pred,
             som_labels,
         ):
             writer.writerow(

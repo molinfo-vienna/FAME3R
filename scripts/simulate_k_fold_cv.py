@@ -65,8 +65,8 @@ def main() -> None:
         clf.fit(descriptors_train, y_true_train)
 
         print('Predicting on validation set...')
-        y_pred = clf.predict_proba(decriptors_val)[:, 1]
-        y_pred_bin = (y_pred > THRESHOLD).astype(int)
+        y_prob = clf.predict_proba(decriptors_val)[:, 1]
+        y_pred = (y_prob > THRESHOLD).astype(int)
 
         print('Computing metrics...')
         (
@@ -74,16 +74,16 @@ def main() -> None:
             precision,
             recall,
             auroc,
-            top2_success_rate,
+            top2,
         ) = PerformanceMetrics.compute_metrics(
-            y_true_val, y_pred, y_pred_bin, mol_id_val
+            y_true_val, y_prob, y_pred, mol_id_val
         )
 
         mcc_scores.append(mcc)
         precision_scores.append(precision)
         recall_scores.append(recall)
         auroc_scores.append(auroc)
-        top2_success_rate_scores.append(top2_success_rate)
+        top2_success_rate_scores.append(top2)
 
     metrics_file = os.path.join(args.out_folder, "metrics.txt")
     with open(metrics_file, "w") as file:
@@ -100,7 +100,7 @@ def main() -> None:
             f"AUROC: {round(mean(auroc_scores), 4)} +/- {round(stdev(auroc_scores), 4)}\n"
         )
         file.write(
-            f"Top2 success rate: {round(mean(top2_success_rate_scores), 4)} +/- {round(stdev(top2_success_rate_scores), 4)}\n"
+            f"Top-2 correctness rate: {round(mean(top2_success_rate_scores), 4)} +/- {round(stdev(top2_success_rate_scores), 4)}\n"
         )
     print(f"Metrics saved to {metrics_file}")
 

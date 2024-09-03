@@ -29,10 +29,10 @@ A re-implementation of the FAME.AL project.
 
 ```python scripts/train.py -i INPUT_FILE -o OUTPUT_FOLDER -r RADIUS[OPTIONAL, DEFAULT=5]```
 
-#### Applying a trained model on some test data
+#### Applying a trained model on some (labeled) test data
 
 ```python scripts/test.py -i INPUT_FILE -m MODEL_FILE -o OUTPUT_FOLDER -r RADIUS[OPTIONAL, DEFAULT=5]```
 
-#### Computing the SoMs of some data that is without experimentally confirmed SoMs
+#### Computing the SoMs of some unlabeled data
 
 ```python scripts/infer.py -i INPUT_FILE -m MODEL_FILE -o OUTPUT_FOLDER -r RADIUS[OPTIONAL, DEFAULT=5]```
