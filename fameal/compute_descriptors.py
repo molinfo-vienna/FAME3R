@@ -10,9 +10,8 @@ import pandas as pd
 warnings.simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
 
 import CDPL.Chem as Chem
-import CDPL.MolProp as MolProp
 import CDPL.ForceField as ForceField
-
+import CDPL.MolProp as MolProp
 
 # calculate cpdkit descriptor.
 # input using .sdf or text file with smiles
@@ -278,9 +277,10 @@ class FAMEDescriptors:
         if not os.path.exists(out_not_calculated_cpds) and not os.path.exists(
             out_descriptors
         ):
-            with open(out_not_calculated_cpds, "w") as f_not_calc, open(
-                out_descriptors, "w"
-            ) as f_desc:
+            with (
+                open(out_not_calculated_cpds, "w") as f_not_calc,
+                open(out_descriptors, "w") as f_desc,
+            ):
                 f_not_calc.write("sybyl_atom_type_id,sybyl_atom_type,mol_id\n")
 
                 i = 0

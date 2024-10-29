@@ -19,6 +19,6 @@ authors = [
 maintainers = [
   {name = "Roxane Jacob", email = "roxane.axel.jacob@univie.ac.at"}
 ]
-description = "AweSOM: Predicts Sites of Metabolism (SoMs) with Uncertainty Estimation."
+description = "Re-implementation of the FAME.AL model"
 readme = "README.md"
 license = {text = "MIT License"}

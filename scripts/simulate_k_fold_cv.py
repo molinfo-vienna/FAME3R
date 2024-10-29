@@ -1,17 +1,15 @@
 import argparse
 import os
 import sys
+from datetime import datetime
+from statistics import mean, stdev
 
 import numpy as np
-
-from datetime import datetime
 from joblib import load
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import KFold
-from statistics import mean, stdev
 
 from fameal import FAMEDescriptors, PerformanceMetrics
-
 
 THRESHOLD = 0.3
 K = 10
@@ -58,26 +56,24 @@ def main() -> None:
         y_true_val = som_labels[val_indexes]
         mol_id_val = mol_ids[val_indexes]
 
-        print('Training model...')
+        print("Training model...")
         clf = RandomForestClassifier(
             n_estimators=250, class_weight="balanced_subsample", random_state=42
         )
         clf.fit(descriptors_train, y_true_train)
 
-        print('Predicting on validation set...')
+        print("Predicting on validation set...")
         y_prob = clf.predict_proba(decriptors_val)[:, 1]
         y_pred = (y_prob > THRESHOLD).astype(int)
 
-        print('Computing metrics...')
+        print("Computing metrics...")
         (
             mcc,
             precision,
             recall,
             auroc,
             top2,
-        ) = PerformanceMetrics.compute_metrics(
-            y_true_val, y_prob, y_pred, mol_id_val
-        )
+        ) = PerformanceMetrics.compute_metrics(y_true_val, y_prob, y_pred, mol_id_val)
 
         mcc_scores.append(mcc)
         precision_scores.append(precision)
@@ -107,7 +103,7 @@ def main() -> None:
 
 def parseArgs() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Applies a pretrained re-implementation of the FAME.AL model to test data."
+        description="Simulates k-fold cross-validation results for a re-implementation of the FAME.AL model."
     )
 
     parser.add_argument(

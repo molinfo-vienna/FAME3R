@@ -2,13 +2,12 @@ import argparse
 import csv
 import os
 import sys
-
 from datetime import datetime
+
 from joblib import dump
 from sklearn.ensemble import RandomForestClassifier
 
 from fameal import FAMEDescriptors
-
 
 THRESHOLD = 0.3
 
@@ -47,7 +46,7 @@ def main() -> None:
 
 def parseArgs() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Trains and tests a re-implementation of the FAME.AL model."
+        description="Trains a re-implementation of the FAME.AL model."
     )
 
     parser.add_argument(

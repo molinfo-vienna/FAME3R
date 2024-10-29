@@ -1,5 +1,4 @@
 import numpy as np
-
 from sklearn.metrics import (
     matthews_corrcoef,
     precision_score,
