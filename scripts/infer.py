@@ -6,7 +6,7 @@ from datetime import datetime
 
 from joblib import load
 
-from fameal import FAMEDescriptors
+from fame3r import FAMEDescriptors
 
 THRESHOLD = 0.3
 

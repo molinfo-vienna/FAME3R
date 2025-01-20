@@ -8,7 +8,7 @@ from statistics import mean, stdev
 import numpy as np
 from joblib import load
 
-from fameal import FAMEDescriptors, PerformanceMetrics
+from fame3r import FAMEDescriptors, PerformanceMetrics
 
 NUM_BOOTSTRAPS = 1000
 THRESHOLD = 0.3
@@ -67,16 +67,16 @@ def main() -> None:
 
     metrics_file = os.path.join(args.out_folder, "metrics.txt")
     with open(metrics_file, "w") as file:
-        file.write(f"MCC: {round(mean(mccs), 4)} +/- {round(stdev(mccs), 4)}\n")
+        file.write(f"MCC: {round(mean(mccs), 2)} +/- {round(stdev(mccs), 2)}\n")
         file.write(
-            f"Precision: {round(mean(precisions), 4)} +/- {round(stdev(precisions), 4)}\n"
+            f"Precision: {round(mean(precisions), 2)} +/- {round(stdev(precisions), 2)}\n"
         )
         file.write(
-            f"Recall: {round(mean(recalls), 4)} +/- {round(stdev(recalls), 4)}\n"
+            f"Recall: {round(mean(recalls), 2)} +/- {round(stdev(recalls), 2)}\n"
         )
-        file.write(f"AUROC: {round(mean(aurocs), 4)} +/- {round(stdev(aurocs), 4)}\n")
+        file.write(f"AUROC: {round(mean(aurocs), 2)} +/- {round(stdev(aurocs), 2)}\n")
         file.write(
-            f"Top-2 correctness rate: {round(mean(top2s), 4)} +/- {round(stdev(top2s), 4)}\n"
+            f"Top-2 correctness rate: {round(mean(top2s), 2)} +/- {round(stdev(top2s), 2)}\n"
         )
     print(f"Metrics saved to {metrics_file}")
 

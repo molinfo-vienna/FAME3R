@@ -9,7 +9,7 @@ from joblib import load
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import KFold
 
-from fameal import FAMEDescriptors, PerformanceMetrics
+from fame3r import FAMEDescriptors, PerformanceMetrics
 
 THRESHOLD = 0.3
 K = 10
