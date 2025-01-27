@@ -3,12 +3,12 @@ requires = ["hatchling<=1.18.0"]
 build-backend = "hatchling.build"
 
 [project]
-name = "fameal"
+name = "fame3r"
 version = "2024.0.0"
 dependencies = [
     "CDPKit==1.1.1",
     "joblib==1.4.2",
-    "numpy>=1.26.4",
+    "numpy>=1.26.4, <2.0.0",
     "pandas>=2.2.2",
     "scikit-learn>=1.5.1",
 ]
