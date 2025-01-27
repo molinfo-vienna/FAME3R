@@ -93,6 +93,8 @@ if __name__ == "__main__":
     # Define parameter grid for RandomForest
     param_grid = {
         "n_estimators": [100, 250, 500, 750],
+        "criterion": ["gini", "entropy"],
+        "max_features": ["sqrt", "log2", None],
         "class_weight": ["balanced", "balanced_subsample"],
     }
 
