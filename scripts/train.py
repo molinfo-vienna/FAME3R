@@ -1,5 +1,15 @@
 # pylint: disable=C0114,R0801
 
+"""Trains a re-implementation of the FAME.AL model.
+
+This script trains a random forest classifier using the FAME descriptors.
+The model is saved in the output folder as a joblib file.
+The hyperparameters of the model and the radius of the atom environment \
+    are not optimized in this script (see cv_hp_search.py). The former can \
+    set in the RandomForestClassifier constructor, and the latter can be set \
+    by changing the radius command line argument (default is 5).
+"""
+
 import argparse
 import os
 import sys
@@ -10,11 +20,11 @@ from sklearn.ensemble import RandomForestClassifier
 
 from fame3r import FAMEDescriptors
 
-THRESHOLD = 0.3
+THRESHOLD = 0.2
 
 
-# pylint: disable=C0116
 def parse_arguments() -> argparse.Namespace:
+    """Parse command line arguments."""
     parser = argparse.ArgumentParser(
         description="Trains a re-implementation of the FAME.AL model."
     )
@@ -72,10 +82,8 @@ if __name__ == "__main__":
 
     print("Training model...")
     clf = RandomForestClassifier(
-        n_estimators=250,
-        min_samples_split=2,
-        max_features="sqrt",
-        class_weight="balanced_subsample",
+        n_estimators=500,
+        class_weight="balanced",
         random_state=42,
     )
     clf.fit(descriptors, som_labels)

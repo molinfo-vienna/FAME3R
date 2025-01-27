@@ -1,4 +1,18 @@
-# pylint: disable=C0114,R0801
+# pylint: disable=R0801
+
+"""Performs K-fold grid-search cross-validation to find the best model hyperparameters.
+
+The searching space can be set in the param_grid dictionary. \
+    The script saves the best hyperparameters to a text file.
+The script also saves the optimal decision threshold to a text file. \
+    The optimal threshold is determined by the majority vote of \
+        the best thresholds found in each fold.
+The script saves the optimal k-fold CV metrics (mean and standard deviation) \
+    of the model to a text file.
+The number of folds can be set by changing the NUM_FOLDS variable. Default is 10.
+The radius of the atom environment is not part of the hyperparameter search, \
+    but can be set by changing the radius argument. Default is 5.
+"""
 
 import argparse
 import os
@@ -9,16 +23,17 @@ from statistics import mean, stdev
 
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import average_precision_score, make_scorer, matthews_corrcoef
+from sklearn.metrics import (average_precision_score, make_scorer,
+                             matthews_corrcoef)
 from sklearn.model_selection import GridSearchCV, GroupKFold
 
 from fame3r import FAMEDescriptors, compute_metrics
 
-NUM_FOLDS = 10
+NUM_FOLDS = 10  # Number of folds for cross-validation
 
 
-# pylint: disable=C0116
 def parse_arguments() -> argparse.Namespace:
+    """Parse command line arguments."""
     parser = argparse.ArgumentParser(
         description="Performs K-fold cross-validation to find the \
             best hyperparameters of a re-implementation of the FAME.AL model."
@@ -78,8 +93,6 @@ if __name__ == "__main__":
     # Define parameter grid for RandomForest
     param_grid = {
         "n_estimators": [100, 250, 500, 750],
-        "min_samples_split": [2, 5, 10],  # [2, 5, 10],
-        "max_features": ["sqrt", "log2", None],
         "class_weight": ["balanced", "balanced_subsample"],
     }
 
@@ -94,6 +107,7 @@ if __name__ == "__main__":
         cv=kf.split(descriptors, som_labels, groups=mol_ids),
         scoring=scorer,
         n_jobs=-1,
+        verbose=3,
     )
 
     grid_search.fit(descriptors, som_labels)

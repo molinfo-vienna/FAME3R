@@ -1,4 +1,13 @@
-# pylint: disable=C0114,R0801
+# pylint: disable=R0801
+
+"""Tests a trained re-implementation of the FAME.AL model to unlabeled data.
+
+The script saves the predictions to a CSV file.
+The radius of the atom environment is not part of the hyperparameter search, \
+    but can be set by changing the radius argument. Default is 5.
+The decision threshold can be changed by modifying the THRESHOLD variable. Default is 0.3.
+"""
+
 
 import argparse
 import csv
@@ -13,8 +22,8 @@ from fame3r import FAMEDescriptors
 THRESHOLD = 0.3
 
 
-# pylint: disable=C0116
 def parse_arguments() -> argparse.Namespace:
+    """Parse command line arguments."""
     parser = argparse.ArgumentParser(
         description="Applies a trained re-implementation of the FAME.AL model to unlabeled data"
     )

@@ -1,4 +1,15 @@
-# pylint: disable=C0114,R0801
+# pylint: disable=R0801
+
+"""Tests a trained re-implementation of the FAME.AL model.
+
+The script saves the test metrics to a text file.
+The script saves the predictions to a CSV file.
+The script performs bootstrapping to estimate the uncertainty of the metrics.\
+    The number of bootstraps can be set by changing the NUM_BOOTSTRAPS variable. Default is 1000.
+The radius of the atom environment is not part of the hyperparameter search, \
+    but can be set by changing the radius argument. Default is 5.
+The decision threshold can be changed by modifying the THRESHOLD variable. Default is 0.3.
+"""
 
 import argparse
 import csv
@@ -13,11 +24,11 @@ from joblib import load
 from fame3r import FAMEDescriptors, compute_metrics
 
 NUM_BOOTSTRAPS = 1000
-THRESHOLD = 0.3
+THRESHOLD = 0.2
 
 
-# pylint: disable=C0116
 def parse_arguments() -> argparse.Namespace:
+    """Parse command line arguments."""
     parser = argparse.ArgumentParser(
         description="Tests a trained re-implementation of the FAME.AL model."
     )

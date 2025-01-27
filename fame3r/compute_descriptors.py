@@ -1,4 +1,6 @@
-# pylint: disable=C0114,E1101,R0903,R0914
+# pylint: disable=E1101,R0903,R0914
+
+"""Module for computing FAME descriptors for a given molecule."""
 
 import ast
 import os
@@ -85,6 +87,7 @@ class DescriptorGenerator:
     """Class for generating descriptors for a given atom in a molecule."""
 
     def __init__(self, radius):
+        """Initialize the DescriptorGenerator class."""
         self.radius = radius
 
     def generate_descriptors(
@@ -206,7 +209,7 @@ class DescriptorGenerator:
         Returns:
             tuple: (max_top_dist, max_distance_center)
         """
-        max_top_dist = max( 
+        max_top_dist = max(
             Chem.getTopologicalDistance(atom1, atom2, molgraph)
             for atom1 in molgraph.atoms
             for atom2 in molgraph.atoms
@@ -222,6 +225,7 @@ class FAMEDescriptors:
     """Class for computing FAME descriptors for a given molecule."""
 
     def __init__(self, radius):
+        """Initialize the FAMEDescriptors class."""
         self.radius = radius
         self.descriptor_generator = DescriptorGenerator(radius)
 
