@@ -1,4 +1,6 @@
-from .compute_descriptors import FAMEDescriptors
-from .performance_metrics import PerformanceMetrics
+# pylint: disable=C0114
 
-__all__ = ["FAMEDescriptors", "PerformanceMetrics"]
+from .compute_descriptors import FAMEDescriptors
+from .performance_metrics import compute_metrics
+
+__all__ = ["FAMEDescriptors", "compute_metrics"]

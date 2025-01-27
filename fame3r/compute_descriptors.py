@@ -1,22 +1,17 @@
+# pylint: disable=C0114,E1101,R0903,R0914
+
 import ast
 import os
 import sys
 import warnings
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from CDPL import Chem, ForceField, MolProp
 
 # Suppress pandas performance warning
 warnings.simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
-
-import CDPL.Chem as Chem
-import CDPL.ForceField as ForceField
-import CDPL.MolProp as MolProp
-
-# calculate cpdkit descriptor.
-# input using .sdf or text file with smiles
-# when using .sdf, the columns should have mol_id, site of metabolism labeled as a list of atom index in "soms"
-# when using smiles, the columns should be mol_id, preprocessed_smi
 
 SYBYL_ATOM_TYPE_IDX_CDPKIT = [
     1,
@@ -49,6 +44,8 @@ SYBYL_ATOM_TYPE_IDX_CDPKIT = [
 
 
 class MoleculeProcessor:
+    """Class for processing molecules and extracting structure data."""
+
     @staticmethod
     def perceive_mol(mol: Chem.Molecule) -> None:
         """Perceive various molecular properties and set corresponding attributes."""
@@ -85,6 +82,8 @@ class MoleculeProcessor:
 
 
 class DescriptorGenerator:
+    """Class for generating descriptors for a given atom in a molecule."""
+
     def __init__(self, radius):
         self.radius = radius
 
@@ -197,7 +196,9 @@ class DescriptorGenerator:
     def _calculate_distances(
         self, molgraph: Chem.MolecularGraph, ctr_atom: Chem.Atom
     ) -> tuple:
-        """Caclulate the maximum topological distance across the whole molecule and the maximum distance from the center atom.
+        """Calculate the maximum topological distance across \
+            the whole molecule and the maximum distance from the center atom.
+
         Args:
             molgraph (Chem.MolecularGraph):
             ctr_atom (Chem.Atom):
@@ -205,7 +206,7 @@ class DescriptorGenerator:
         Returns:
             tuple: (max_top_dist, max_distance_center)
         """
-        max_top_dist = max(
+        max_top_dist = max( 
             Chem.getTopologicalDistance(atom1, atom2, molgraph)
             for atom1 in molgraph.atoms
             for atom2 in molgraph.atoms
@@ -218,6 +219,8 @@ class DescriptorGenerator:
 
 
 class FAMEDescriptors:
+    """Class for computing FAME descriptors for a given molecule."""
+
     def __init__(self, radius):
         self.radius = radius
         self.descriptor_generator = DescriptorGenerator(radius)
@@ -253,7 +256,7 @@ class FAMEDescriptors:
 
         return descriptor_names, property_dict
 
-    def compute_FAME_descriptors(
+    def compute_fame_descriptors(
         self, in_file: str, out_folder: str, has_soms: bool
     ) -> tuple:
         """Compute FAME descriptors for a given molecule.
@@ -266,20 +269,29 @@ class FAMEDescriptors:
         Returns:
             tuple: (mol_ids, atom_ids, som_labels, descriptors_lst)
         """
+        in_file_path = Path(in_file)
+        out_folder_path = Path(out_folder)
+
         reader = Chem.FileSDFMoleculeReader(in_file)
         mol = Chem.BasicMolecule()
 
         mol_ids, atom_ids, som_labels, descriptors_lst = [], [], [], []
 
-        out_not_calculated_cpds = f"{out_folder}/{os.path.splitext(os.path.basename(in_file))[0]}_{self.radius}_not_calculated_cpds.csv"
-        out_descriptors = f"{out_folder}/{os.path.splitext(os.path.basename(in_file))[0]}_{self.radius}_descriptors.csv"
+        base_filename = in_file_path.stem  # This gets the filename without extension
+
+        out_not_calculated_cpds = (
+            out_folder_path / f"{base_filename}_{self.radius}_not_calculated_cpds.csv"
+        )
+        out_descriptors = (
+            out_folder_path / f"{base_filename}_{self.radius}_descriptors.csv"
+        )
 
         if not os.path.exists(out_not_calculated_cpds) and not os.path.exists(
             out_descriptors
         ):
             with (
-                open(out_not_calculated_cpds, "w") as f_not_calc,
-                open(out_descriptors, "w") as f_desc,
+                open(out_not_calculated_cpds, "w", encoding="UTF-8") as f_not_calc,
+                open(out_descriptors, "w", encoding="UTF-8") as f_desc,
             ):
                 f_not_calc.write("sybyl_atom_type_id,sybyl_atom_type,mol_id\n")
 
@@ -327,15 +339,15 @@ class FAMEDescriptors:
                                     + "\n"
                                 )
 
-                        except Exception as e:
+                        except RuntimeError as e:
                             sys.exit(f"Error: processing of molecule failed:\n{e}")
 
-                except Exception as e:
+                except RuntimeError as e:
                     sys.exit(f"Error: reading molecule failed:\n{e}")
 
         else:
             print(f"Reading pre-calculated descriptors from {out_descriptors}")
-            with open(out_descriptors, "r") as f:
+            with open(out_descriptors, "r", encoding="UTF-8") as f:
                 next(f)
                 for line in f:
                     parts = line.strip().split(",")
@@ -353,10 +365,10 @@ class FAMEDescriptors:
                 np.array(som_labels, dtype=int),
                 np.array(descriptors_lst, dtype=float),
             )
-        else:
-            return (
-                np.array(mol_ids, dtype=int),
-                np.array(atom_ids, dtype=int),
-                None,
-                np.array(descriptors_lst, dtype=float),
-            )
+
+        return (
+            np.array(mol_ids, dtype=int),
+            np.array(atom_ids, dtype=int),
+            None,
+            np.array(descriptors_lst, dtype=float),
+        )

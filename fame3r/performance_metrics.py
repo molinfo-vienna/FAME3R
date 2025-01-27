@@ -1,5 +1,9 @@
+# pylint: disable=C0114,R0914
+
 import numpy as np
 from sklearn.metrics import (
+    average_precision_score,
+    f1_score,
     matthews_corrcoef,
     precision_score,
     recall_score,
@@ -7,34 +11,47 @@ from sklearn.metrics import (
 )
 
 
-class PerformanceMetrics:
-    @classmethod
-    def compute_metrics(
-        cls,
-        y_true: np.ndarray,
-        y_prob: np.ndarray,
-        y_pred: np.ndarray,
-        mol_id: np.ndarray,
-    ) -> tuple[float, float, float, float, float]:
-        mcc = matthews_corrcoef(y_true, y_pred)
-        precision = precision_score(y_true, y_pred)
-        recall = recall_score(y_true, y_pred)
-        auroc = roc_auc_score(y_true, y_prob)
+def compute_metrics(
+    y_true: np.ndarray,
+    y_prob: np.ndarray,
+    y_pred: np.ndarray,
+    mol_id: np.ndarray,
+) -> tuple[float, float, float, float, float, float, float]:
+    """
+    Compute various performance metrics for binary classification.
 
-        top2 = 0
-        for id in list(
-            dict.fromkeys(mol_id.tolist())
-        ):  # This is a somewhat complicated way to get an ordered set, but it works
-            mask = np.where(mol_id == id)[0]
-            masked_y_true = y_true[mask]
-            masked_y_pred = y_prob[mask]
-            masked_sorted_y_true = np.take(
-                masked_y_true,
-                indices=np.argsort(masked_y_pred)[::-1],
-                axis=0,
-            )
-            if np.sum(masked_sorted_y_true[:2]).item() > 0:
-                top2 += 1
-        top2 /= len(set(mol_id.tolist()))
+    Args:
+        y_true (np.ndarray): Ground truth binary labels.
+        y_prob (np.ndarray): Predicted probabilities for the positive class.
+        y_pred (np.ndarray): Predicted binary labels.
+        mol_id (np.ndarray): Array of molecule IDs corresponding to each data point.
 
-        return mcc, precision, recall, auroc, top2
+    Returns:
+        tuple[float, float, float, float, float, float, float]:
+            A tuple containing AUROC, AP, F1, MCC, precision, recall, and top-2 success rate.
+    """
+    # Basic metrics
+    auroc = roc_auc_score(y_true, y_prob)
+    ap = average_precision_score(y_true, y_prob)
+    f1 = f1_score(y_true, y_pred)
+    mcc = matthews_corrcoef(y_true, y_pred)
+    precision = precision_score(y_true, y_pred)
+    recall = recall_score(y_true, y_pred)
+
+    # Calculate Top-2 success rate
+    unique_mol_ids, _ = np.unique(mol_id, return_index=True)
+    top2_sucesses = 0
+
+    for i in unique_mol_ids:
+        mask = mol_id == i
+        masked_y_true = y_true[mask]
+        masked_y_prob = y_prob[mask]
+
+        # Sort by predicted probability (descending) and take the top 2
+        top_2_indices = np.argsort(masked_y_prob)[-2:]
+        if masked_y_true[top_2_indices].sum() > 0:
+            top2_sucesses += 1
+
+    top2_rate = top2_sucesses / len(unique_mol_ids)
+
+    return auroc, ap, f1, mcc, precision, recall, top2_rate
