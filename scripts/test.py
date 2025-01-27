@@ -19,7 +19,7 @@ from statistics import mean, stdev
 import numpy as np
 from joblib import load
 
-from fame3r import FAMEDescriptors, compute_metrics
+from src import FAMEDescriptors, compute_metrics
 
 NUM_BOOTSTRAPS = 1000
 THRESHOLD = 0.2

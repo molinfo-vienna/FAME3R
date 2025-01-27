@@ -16,7 +16,7 @@ from datetime import datetime
 from joblib import dump
 from sklearn.ensemble import RandomForestClassifier
 
-from fame3r import FAMEDescriptors
+from src import FAMEDescriptors
 
 THRESHOLD = 0.2
 

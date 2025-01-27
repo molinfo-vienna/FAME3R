@@ -24,7 +24,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import average_precision_score, make_scorer, matthews_corrcoef
 from sklearn.model_selection import GridSearchCV, GroupKFold
 
-from fame3r import FAMEDescriptors, compute_metrics
+from src import FAMEDescriptors, compute_metrics
 
 NUM_FOLDS = 10  # Number of folds for cross-validation
 
