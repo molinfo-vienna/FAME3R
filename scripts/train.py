@@ -81,6 +81,7 @@ if __name__ == "__main__":
     print("Training model...")
     clf = RandomForestClassifier(
         n_estimators=500,
+        max_features="sqrt",
         class_weight="balanced",
         random_state=42,
     )

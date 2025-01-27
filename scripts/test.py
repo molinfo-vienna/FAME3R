@@ -6,7 +6,7 @@ The script performs bootstrapping to estimate the uncertainty of the metrics.\
     The number of bootstraps can be set by changing the NUM_BOOTSTRAPS variable. Default is 1000.
 The radius of the atom environment is not part of the hyperparameter search, \
     but can be set by changing the radius argument. Default is 5.
-The decision threshold can be changed by modifying the THRESHOLD variable. Default is 0.3.
+The decision threshold can be changed by modifying the THRESHOLD variable. Default is 0.2.
 """
 
 import argparse

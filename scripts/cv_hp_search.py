@@ -89,7 +89,7 @@ if __name__ == "__main__":
 
     param_grid = {
         "n_estimators": [100, 250, 500, 750],
-        "max_features": ["sqrt", "log2", None],
+        "max_features": ["sqrt", "log2"],
         "class_weight": ["balanced", "balanced_subsample"],
     }
 
