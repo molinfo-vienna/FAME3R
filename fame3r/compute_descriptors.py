@@ -1,4 +1,4 @@
-# pylint: disable=E1101,R0903,R0914
+# pylint: disable=E1101,R0903
 
 """Module for computing FAME descriptors for a given molecule."""
 

@@ -1,5 +1,3 @@
-# pylint: disable=C0114,R0801
-
 """Trains a re-implementation of the FAME.AL model.
 
 This script trains a random forest classifier using the FAME descriptors.

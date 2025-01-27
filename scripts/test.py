@@ -1,5 +1,3 @@
-# pylint: disable=R0801
-
 """Tests a trained re-implementation of the FAME.AL model.
 
 The script saves the test metrics to a text file.

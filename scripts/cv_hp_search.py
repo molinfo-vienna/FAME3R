@@ -1,5 +1,3 @@
-# pylint: disable=R0801
-
 """Performs K-fold grid-search cross-validation to find the best model hyperparameters.
 
 The searching space can be set in the param_grid dictionary. \
@@ -23,8 +21,7 @@ from statistics import mean, stdev
 
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import (average_precision_score, make_scorer,
-                             matthews_corrcoef)
+from sklearn.metrics import average_precision_score, make_scorer, matthews_corrcoef
 from sklearn.model_selection import GridSearchCV, GroupKFold
 
 from fame3r import FAMEDescriptors, compute_metrics
@@ -90,10 +87,8 @@ if __name__ == "__main__":
         args.input_file, args.out_folder, has_soms=True
     )
 
-    # Define parameter grid for RandomForest
     param_grid = {
         "n_estimators": [100, 250, 500, 750],
-        "criterion": ["gini", "entropy"],
         "max_features": ["sqrt", "log2", None],
         "class_weight": ["balanced", "balanced_subsample"],
     }

@@ -1,11 +1,14 @@
-# pylint: disable=R0914
-
 """Module for computing performance metrics for binary classification task."""
 
 import numpy as np
-from sklearn.metrics import (average_precision_score, f1_score,
-                             matthews_corrcoef, precision_score, recall_score,
-                             roc_auc_score)
+from sklearn.metrics import (
+    average_precision_score,
+    f1_score,
+    matthews_corrcoef,
+    precision_score,
+    recall_score,
+    roc_auc_score,
+)
 
 
 def compute_metrics(

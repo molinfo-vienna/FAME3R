@@ -1,5 +1,3 @@
-# pylint: disable=R0801
-
 """Tests a trained re-implementation of the FAME.AL model to unlabeled data.
 
 The script saves the predictions to a CSV file.
@@ -7,7 +5,6 @@ The radius of the atom environment is not part of the hyperparameter search, \
     but can be set by changing the radius argument. Default is 5.
 The decision threshold can be changed by modifying the THRESHOLD variable. Default is 0.3.
 """
-
 
 import argparse
 import csv
