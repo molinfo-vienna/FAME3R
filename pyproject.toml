@@ -19,6 +19,6 @@ authors = [
 maintainers = [
   {name = "Roxane Jacob", email = "roxane.axel.jacob@univie.ac.at"}
 ]
-description = "FAME3R: a brief re-implementation of the FAME.AL model"
+description = "FAME3R: a re-implementation of the FAME.AL model"
 readme = "README.md"
 license = {text = "MIT License"}

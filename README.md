@@ -1,6 +1,6 @@
 FAME3R
 
-A brief re-implementation of the FAME.AL project.
+A re-implementation of the FAME.AL model.
 
 
 ### Installation
@@ -13,7 +13,7 @@ A brief re-implementation of the FAME.AL project.
 
 2. Create a conda environment with the required python version:
 
-```conda env create --name fame3r-env python=3.10```
+```conda create --name fame3r-env python=3.10```
 
 3. Activate the environment:
 
