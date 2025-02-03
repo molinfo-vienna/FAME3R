@@ -1,7 +1,6 @@
 data/
 dist/
 output/
-mypy.ini
 .vscode/
 *.sh
 *.ipynb
