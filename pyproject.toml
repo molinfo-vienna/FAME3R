@@ -24,9 +24,12 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "black",
+  "flake8",
   "isort",
-  "pylint",
+  "mypy",
   "pydocstyle",
+  "pylint",
+  "pytest",
 ]
 
 [tool.pylint.messages_control]

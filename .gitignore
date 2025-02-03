@@ -1,6 +1,11 @@
 data/
+dist/
 output/
+.flake8
+mypy.ini
 .vscode/
-**/__pycache__/
 *.sh
 *.ipynb
+**/__pycache__/
+.mypy_cache/
+.pytest_cache/
