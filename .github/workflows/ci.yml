@@ -34,7 +34,7 @@ jobs:
       run: isort .
 
     - name: Run mypy
-      run: mypy --config-file==mypy.ini .
+      run: mypy --config-file=mypy.ini .
     
     - name: Run pylint
       run: pylint .
