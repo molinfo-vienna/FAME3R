@@ -1,4 +1,4 @@
-FAME3R: a re-implementation of the FAME.AL model.
+FAME3R: a re-implementation of the FAME3 model.
 
 
 ### Installation

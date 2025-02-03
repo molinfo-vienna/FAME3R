@@ -1,0 +1,5 @@
+CDPKit==1.1.1
+joblib==1.4.2
+numpy>=1.26.4, <2.0.0
+pandas>=2.2.2
+scikit-learn>=1.5.1
