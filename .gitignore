@@ -1,7 +1,6 @@
 data/
 dist/
 output/
-.flake8
 mypy.ini
 .vscode/
 *.sh

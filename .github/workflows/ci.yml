@@ -28,13 +28,13 @@ jobs:
       run: black .
 
     - name: Run flake8
-      run: flake8 .
+      run: flake8 --max-line-length=100 .
     
     - name: Run isort
       run: isort .
 
     - name: Run mypy
-      run: mypy .
+      run: mypy --config-file==mypy.ini .
     
     - name: Run pylint
       run: pylint .
