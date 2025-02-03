@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fame3r"
-version = "2025.0.0"
+version = "2025.1.0"
 description = "FAME3R: a re-implementation of the FAME3 model"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -16,8 +16,13 @@ authors = [
 [tool.setuptools.dynamic]
 dependencies = {file = "requirements.txt"}
 
-[tool.setuptools.dynamic.optional-dependencies]
-dev = {file  = ["requirements.txt", "requirements_dev.txt"]}
+[project.optional-dependencies]
+dev = [
+  "black",
+  "isort",
+  "pylint",
+  "pydocstyle",
+]
 
 [tool.pylint.messages_control]
 disable = [
