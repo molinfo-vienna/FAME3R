@@ -21,7 +21,8 @@ from statistics import mean, stdev
 
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import average_precision_score, make_scorer, matthews_corrcoef
+from sklearn.metrics import (average_precision_score, make_scorer,
+                             matthews_corrcoef)
 from sklearn.model_selection import GridSearchCV, GroupKFold
 
 from src import FAMEDescriptors, compute_metrics
