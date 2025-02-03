@@ -2,3 +2,5 @@ data/
 output/
 .vscode/
 **/__pycache__/
+*.sh
+*.ipynb
