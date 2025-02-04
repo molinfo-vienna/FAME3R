@@ -2,14 +2,14 @@
 
 The searching space can be set in the param_grid dictionary. \
     The script saves the best hyperparameters to a text file.
-The script also saves the optimal decision threshold to a text file. \
+The script also saves the optimal binary decision threshold to a text file. \
     The optimal threshold is determined by the majority vote of \
         the best thresholds found in each fold.
-The script saves the optimal k-fold CV metrics (mean and standard deviation) \
+This script saves the optimal k-fold CV metrics (mean and standard deviation) \
     of the model to a text file.
-The number of folds can be set by changing the NUM_FOLDS variable. Default is 10.
 The radius of the atom environment is not part of the hyperparameter search, \
     but can be set by changing the radius argument. Default is 5.
+The number of folds can be set by changing the numFolds argument. Default is 10.
 """
 
 import argparse
@@ -22,26 +22,25 @@ from typing import Dict, List
 
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import average_precision_score, make_scorer, matthews_corrcoef
+from sklearn.metrics import (average_precision_score, make_scorer,
+                             matthews_corrcoef)
 from sklearn.model_selection import GridSearchCV, GroupKFold
 
 from src import FAMEDescriptors, compute_metrics
-
-NUM_FOLDS = 10  # Number of folds for cross-validation
 
 
 def parse_arguments() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
         description="Performs K-fold cross-validation to find the \
-            best hyperparameters of a re-implementation of the FAME.AL model."
+            best hyperparameters of a re-implementation of the FAME3 model."
     )
 
     parser.add_argument(
         "-i",
         dest="input_file",
         required=True,
-        metavar="<Input data file>",
+        metavar="<input data file>",
         help="Input data file",
     )
     parser.add_argument(
@@ -58,6 +57,15 @@ def parse_arguments() -> argparse.Namespace:
         metavar="<radius>",
         default=5,
         help="Max. atom environment radius in number of bonds",
+        type=int,
+    )
+    parser.add_argument(
+        "-n",
+        dest="numFolds",
+        required=False,
+        metavar="<number of cross-validation folds>",
+        default=10,
+        help="Number of cross-validation folds",
         type=int,
     )
 
@@ -80,6 +88,7 @@ if __name__ == "__main__":
 
     descriptors_generator = FAMEDescriptors(args.radius)
     (
+        mol_num_ids,
         mol_ids,
         atom_ids,
         som_labels,
@@ -96,13 +105,13 @@ if __name__ == "__main__":
 
     scorer = make_scorer(average_precision_score, greater_is_better=True)
 
-    kf = GroupKFold(n_splits=NUM_FOLDS, random_state=42, shuffle=True)
+    kf = GroupKFold(n_splits=args.numFolds, random_state=42, shuffle=True)
 
     print("Performing hyperparameter optimization using GridSearchCV...")
     grid_search = GridSearchCV(
         RandomForestClassifier(random_state=42),
         param_grid,
-        cv=kf.split(descriptors, som_labels, groups=mol_ids),
+        cv=kf.split(descriptors, som_labels, groups=mol_num_ids),
         scoring=scorer,
         n_jobs=-1,
         verbose=3,
@@ -132,16 +141,17 @@ if __name__ == "__main__":
 
     best_thresholds = []
     for i, (train_index, val_index) in enumerate(
-        kf.split(descriptors, som_labels, groups=mol_ids)
+        kf.split(descriptors, som_labels, groups=mol_num_ids)
     ):
         print(f"Fold {i+1}")
 
-        descriptors_train = descriptors[train_index, :]
+        assert som_labels is not None, "SOM labels are missing"
         y_true_train = som_labels[train_index]
+        descriptors_train = descriptors[train_index, :]
 
         decriptors_val = descriptors[val_index, :]
         y_true_val = som_labels[val_index]
-        mol_id_val = mol_ids[val_index]
+        mol_num_id_val = mol_num_ids[val_index]
 
         print("Training model with best parameters...")
         best_model.fit(descriptors_train, y_true_train)
@@ -176,7 +186,7 @@ if __name__ == "__main__":
             precision,
             recall,
             top2,
-        ) = compute_metrics(y_true_val, y_prob, y_pred, mol_id_val)
+        ) = compute_metrics(y_true_val, y_prob, y_pred, mol_num_id_val)
 
         metrics["AUROC"].append(auroc)
         metrics["Average precision"].append(average_precision)
@@ -197,7 +207,7 @@ if __name__ == "__main__":
     print(f"Optimal threshold saved to {best_params_file}")
 
     # Save metrics
-    metrics_file = os.path.join(args.out_folder, f"{NUM_FOLDS}_fold_cv_metrics.txt")
+    metrics_file = os.path.join(args.out_folder, f"{args.numFolds}_fold_cv_metrics.txt")
     with open(metrics_file, "w", encoding="UTF-8") as file:
         for metric, scores in metrics.items():
             file.write(

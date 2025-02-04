@@ -7,6 +7,7 @@ import os
 import sys
 import warnings
 from pathlib import Path
+from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -75,8 +76,6 @@ class MoleculeProcessor:
         data_dict = {}
 
         for entry in struct_data:
-            if "mol_id" in entry.header:
-                data_dict["mol_id"] = entry.data
             if "soms" in entry.header:
                 data_dict["soms"] = ast.literal_eval(entry.data)
 
@@ -96,8 +95,8 @@ class DescriptorGenerator:
         """Generate descriptors for a given atom in a molecule.
 
         Args:
-            ctr_atom (Chem.Atom):
-            molgraph (Chem.MolecularGraph):
+            ctr_atom (Chem.Atom): center atom
+            molgraph (Chem.MolecularGraph): molecular graph
 
         Returns:
             tuple: (descriptor_names, descriptors)
@@ -162,7 +161,8 @@ class DescriptorGenerator:
             )
 
         max_top_dist, max_distance_center = self._calculate_distances(
-            molgraph, ctr_atom
+            ctr_atom,
+            molgraph,
         )
         descriptor_names += [
             "longestMaxTopDistinMolecule",
@@ -197,14 +197,16 @@ class DescriptorGenerator:
         return descriptor_names, descr
 
     def _calculate_distances(
-        self, molgraph: Chem.MolecularGraph, ctr_atom: Chem.Atom
+        self,
+        ctr_atom: Chem.Atom,
+        molgraph: Chem.MolecularGraph,
     ) -> tuple:
         """Calculate the maximum topological distance across \
             the whole molecule and the maximum distance from the center atom.
 
         Args:
-            molgraph (Chem.MolecularGraph):
-            ctr_atom (Chem.Atom):
+            ctr_atom (Chem.Atom): center atom
+            molgraph (Chem.MolecularGraph): molecular graph
 
         Returns:
             tuple: (max_top_dist, max_distance_center)
@@ -229,18 +231,20 @@ class FAMEDescriptors:
         self.radius = radius
         self.descriptor_generator = DescriptorGenerator(radius)
 
-    def _process_molecule(self, mol: Chem.Molecule, has_soms: bool) -> tuple:
+    def _process_molecule(
+        self, mol: Chem.Molecule, has_soms: bool
+    ) -> Tuple[Tuple, dict]:
         """Process a molecule and generate descriptors for each atom.
 
         Args:
-            mol (Chem.Molecule):
-            has_soms (bool): Whether the input file contains site of metabolism labels.
+            mol (Chem.Molecule): molecule
+            has_soms (bool): whether the input file contains site of metabolism labels
 
         Returns:
             tuple: (descriptor_names, property_dict)
         """
         data_dict = MoleculeProcessor.extract_structure_data(mol)
-        mol_id = data_dict.get("mol_id")
+        mol_id = Chem.getName(mol)
         soms = data_dict.get("soms", [])
 
         MoleculeProcessor.perceive_mol(mol)
@@ -262,117 +266,149 @@ class FAMEDescriptors:
 
     def compute_fame_descriptors(
         self, in_file: str, out_folder: str, has_soms: bool
-    ) -> tuple:
+    ) -> Tuple[np.ndarray, list[str], np.ndarray, Optional[np.ndarray], np.ndarray]:
         """Compute FAME descriptors for a given molecule.
 
         Args:
-            in_file (str): Input file path.
-            out_folder (str): Output folder path.
-            has_soms (bool): Whether the input file contains site of metabolism labels.
+            in_file (str): input file path
+            out_folder (str): output folder path
+            has_soms (bool): whether the input file contains site of metabolism labels
 
         Returns:
-            tuple: (mol_ids, atom_ids, som_labels, descriptors_lst)
+            tuple: (mol_num_ids, mol_ids, atom_ids, som_labels, descriptors_lst)
         """
-        in_file_path = Path(in_file)
-        out_folder_path = Path(out_folder)
+        in_file_path, out_folder_path = Path(in_file), Path(out_folder)
+        out_not_calculated, out_descriptors = self._get_output_file_paths(
+            in_file_path, out_folder_path
+        )
 
+        if not os.path.exists(out_not_calculated) and not os.path.exists(
+            out_descriptors
+        ):
+            return self._compute_and_save_descriptors(
+                in_file, out_not_calculated, out_descriptors, has_soms
+            )
+        return self._read_precomputed_descriptors(out_descriptors, has_soms)
+
+    def _get_output_file_paths(
+        self, in_file_path: Path, out_folder_path: Path
+    ) -> Tuple[Path, Path]:
+        """Generate output file paths for descriptors and not-calculated compounds."""
+        out_not_calculated = (
+            out_folder_path
+            / f"{in_file_path.stem}_{self.radius}_not_calculated_cpds.csv"
+        )
+        out_descriptors = (
+            out_folder_path / f"{in_file_path.stem}_{self.radius}_descriptors.csv"
+        )
+        return out_not_calculated, out_descriptors
+
+    def _compute_and_save_descriptors(
+        self,
+        in_file: str,
+        out_not_calculated: Path,
+        out_descriptors: Path,
+        has_soms: bool,
+    ) -> Tuple[np.ndarray, List[str], np.ndarray, Optional[np.ndarray], np.ndarray]:
+        """Compute and save descriptors from molecules."""
         reader = Chem.FileSDFMoleculeReader(in_file)
         mol = Chem.BasicMolecule()
 
-        mol_ids, atom_ids, som_labels, descriptors_lst = [], [], [], []
+        mol_num_ids: List[int] = []
+        mol_ids: List[str] = []
+        atom_ids: List[int] = []
+        som_labels: List[int] = []
+        descriptors_lst: List[List[float]] = []
 
-        base_filename = in_file_path.stem  # This gets the filename without extension
-
-        out_not_calculated_cpds = (
-            out_folder_path / f"{base_filename}_{self.radius}_not_calculated_cpds.csv"
-        )
-        out_descriptors = (
-            out_folder_path / f"{base_filename}_{self.radius}_descriptors.csv"
-        )
-
-        if not os.path.exists(out_not_calculated_cpds) and not os.path.exists(
-            out_descriptors
+        with (
+            open(out_not_calculated, "w", encoding="UTF-8") as f_not_calc,
+            open(out_descriptors, "w", encoding="UTF-8") as f_desc,
         ):
-            with (
-                open(out_not_calculated_cpds, "w", encoding="UTF-8") as f_not_calc,
-                open(out_descriptors, "w", encoding="UTF-8") as f_desc,
-            ):
-                f_not_calc.write("sybyl_atom_type_id,sybyl_atom_type,mol_id\n")
+            f_not_calc.write("sybyl_atom_type_id,sybyl_atom_type,mol_id\n")
+            i = 0
+            try:
+                while reader.read(mol):
+                    try:
+                        MoleculeProcessor.perceive_mol(mol)
+                        if self._has_uncommon_element(mol, f_not_calc):
+                            continue
 
-                i = 0
-                try:
-                    while reader.read(mol):
-                        try:
-                            MoleculeProcessor.perceive_mol(mol)
-                            uncommon_element = False
-                            for atom in mol.atoms:
-                                atom_type = Chem.getSybylType(atom)
-                                if atom_type not in SYBYL_ATOM_TYPE_IDX_CDPKIT:
-                                    f_not_calc.write(
-                                        f"{atom_type},{Chem.getSybylAtomTypeString(atom_type)},X\n"
-                                    )
-                                    uncommon_element = True
+                        descriptor_names, property_dict = self._process_molecule(
+                            mol, has_soms
+                        )
 
-                            if uncommon_element:
-                                continue
-
-                            descriptor_names, property_dict = self._process_molecule(
-                                mol, has_soms
+                        if i == 0:
+                            f_desc.write(
+                                "mol_num_id,mol_id,atom_id,som_label,"
+                                + ",".join(descriptor_names)
+                                + "\n"
                             )
+                        i += 1
 
-                            if i == 0:
-                                f_desc.write(
-                                    "som_label,mol_id,atom_id,"
-                                    + ",".join(descriptor_names)
-                                    + "\n"
-                                )
-                            i += 1
+                        for (mol_id, atom_id), (
+                            som_label,
+                            descriptors,
+                        ) in property_dict.items():
+                            mol_num_ids.append(i)
+                            mol_ids.append(mol_id)
+                            atom_ids.append(atom_id)
+                            som_labels.append(som_label)
+                            descriptors_lst.append(list(descriptors))
 
-                            for (mol_id, atom_id), (
-                                som_label,
-                                descriptors,
-                            ) in property_dict.items():
-                                mol_ids.append(mol_id)
-                                atom_ids.append(atom_id)
-                                som_labels.append(som_label)
-                                descriptors_lst.append(list(descriptors))
+                            f_desc.write(
+                                f"{i},{mol_id},{atom_id},{som_label},"
+                                + ",".join(map(str, descriptors))
+                                + "\n"
+                            )
+                    except RuntimeError as e:
+                        sys.exit(f"Error: processing of molecule failed:\n{e}")
+            except RuntimeError as e:
+                sys.exit(f"Error: reading molecule failed:\n{e}")
 
-                                f_desc.write(
-                                    f"{som_label},{mol_id},{atom_id},"
-                                    + ",".join(map(str, descriptors))
-                                    + "\n"
-                                )
-
-                        except RuntimeError as e:
-                            sys.exit(f"Error: processing of molecule failed:\n{e}")
-
-                except RuntimeError as e:
-                    sys.exit(f"Error: reading molecule failed:\n{e}")
-
-        else:
-            print(f"Reading pre-calculated descriptors from {out_descriptors}")
-            with open(out_descriptors, "r", encoding="UTF-8") as f:
-                next(f)
-                for line in f:
-                    parts = line.strip().split(",")
-                    som_label, mol_id, atom_id = map(int, parts[:3])
-                    descriptors = list(map(float, parts[3:]))
-                    mol_ids.append(mol_id)
-                    atom_ids.append(atom_id)
-                    som_labels.append(som_label)
-                    descriptors_lst.append(descriptors)
-
-        if has_soms:
             return (
-                np.array(mol_ids, dtype=int),
-                np.array(atom_ids, dtype=int),
-                np.array(som_labels, dtype=int),
-                np.array(descriptors_lst, dtype=float),
+                np.array(mol_num_ids, int),
+                mol_ids,
+                np.array(atom_ids, int),
+                np.array(som_labels, int) if has_soms else None,
+                np.array(descriptors_lst, float),
             )
 
+    def _has_uncommon_element(self, mol, f_not_calc) -> bool:
+        """Check if a molecule contains uncommon elements and log them."""
+        uncommon_element = False
+        for atom in mol.atoms:
+            atom_type = Chem.getSybylType(atom)
+            if atom_type not in SYBYL_ATOM_TYPE_IDX_CDPKIT:
+                f_not_calc.write(
+                    f"{atom_type},{Chem.getSybylAtomTypeString(atom_type)},X\n"
+                )
+                uncommon_element = True
+        return uncommon_element
+
+    def _read_precomputed_descriptors(
+        self, out_descriptors: Path, has_soms: bool
+    ) -> Tuple[np.ndarray, List[str], np.ndarray, Optional[np.ndarray], np.ndarray]:
+        """Read previously computed descriptors from a file."""
+        print(f"Reading pre-calculated descriptors from {out_descriptors}")
+
+        mol_num_ids, mol_ids, atom_ids, som_labels, descriptors_lst = [], [], [], [], []
+
+        with open(out_descriptors, "r", encoding="UTF-8") as f:
+            next(f)  # Skip header
+            for line in f:
+                parts = line.strip().split(",")
+                mol_num_id, mol_id, atom_id, som_label = parts[:4]
+                descriptors = list(map(float, parts[4:]))
+                mol_num_ids.append(mol_num_id)
+                mol_ids.append(mol_id)
+                atom_ids.append(atom_id)
+                som_labels.append(som_label)
+                descriptors_lst.append(descriptors)
+
         return (
-            np.array(mol_ids, dtype=int),
-            np.array(atom_ids, dtype=int),
-            None,
-            np.array(descriptors_lst, dtype=float),
+            np.array(mol_num_ids, int),
+            mol_ids,
+            np.array(atom_ids, int),
+            np.array(som_labels, int) if has_soms else None,
+            np.array(descriptors_lst, float),
         )

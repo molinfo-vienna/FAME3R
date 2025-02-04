@@ -1,9 +1,9 @@
-"""Tests a trained re-implementation of the FAME.AL model to unlabeled data.
+"""Applies a trained re-implementation of the FAME3 model to unlabeled data.
 
-The script saves the predictions to a CSV file.
+This script saves the per-atom predictions to a CSV file.
 The radius of the atom environment is not part of the hyperparameter search, \
     but can be set by changing the radius argument. Default is 5.
-The decision threshold can be changed by modifying the THRESHOLD variable. Default is 0.2.
+The decision threshold can be changed by changing the threshold argument. Default is 0.2.
 """
 
 import argparse
@@ -16,13 +16,11 @@ from joblib import load
 
 from src import FAMEDescriptors
 
-THRESHOLD = 0.2
-
 
 def parse_arguments() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
-        description="Applies a trained re-implementation of the FAME.AL model to unlabeled data"
+        description="Applies a trained re-implementation of the FAME3 model to unlabeled data"
     )
 
     parser.add_argument(
@@ -55,6 +53,15 @@ def parse_arguments() -> argparse.Namespace:
         help="Max. atom environment radius in number of bonds",
         type=int,
     )
+    parser.add_argument(
+        "-t",
+        dest="threshold",
+        required=False,
+        metavar="<binary decision threshold>",
+        default=0.2,
+        help="Binary decision threshold",
+        type=float,
+    )
 
     parse_args = parser.parse_args()
 
@@ -75,6 +82,7 @@ if __name__ == "__main__":
 
     descriptors_generator = FAMEDescriptors(args.radius)
     (
+        mol_num_ids_test,
         mol_ids_test,
         atom_ids_test,
         _,
@@ -83,14 +91,14 @@ if __name__ == "__main__":
         args.input_file, args.out_folder, has_soms=False
     )
 
-    print(f"Data: {len(set(mol_ids_test))} molecules")
+    print(f"Data: {len(set(mol_num_ids_test))} molecules")
 
     print("Loading model...")
     clf = load(args.model_file)
 
     print("Testing model...")
     predictions = clf.predict_proba(descriptors_test)[:, 1]
-    predictions_binary = (predictions > THRESHOLD).astype(int)
+    predictions_binary = (predictions > args.threshold).astype(int)
 
     predictions_file = os.path.join(args.out_folder, "predictions.csv")
     with open(predictions_file, "w", encoding="UTF-8", newline="") as file:

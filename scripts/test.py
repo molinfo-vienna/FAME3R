@@ -1,12 +1,12 @@
-"""Tests a trained re-implementation of the FAME.AL model.
+"""Tests a trained re-implementation of the FAME3 model.
 
-The script saves the test metrics to a text file.
-The script saves the predictions to a CSV file.
-The script performs bootstrapping to estimate the uncertainty of the metrics.\
+This script saves the test metrics to a text file.
+This script saves the per-atom predictions to a CSV file.
+This script performs bootstrapping to estimate the uncertainty in the metrics.\
     The number of bootstraps can be set by changing the NUM_BOOTSTRAPS variable. Default is 1000.
 The radius of the atom environment is not part of the hyperparameter search, \
     but can be set by changing the radius argument. Default is 5.
-The decision threshold can be changed by modifying the THRESHOLD variable. Default is 0.2.
+The decision threshold can be changed by changing the threshold argument. Default is 0.2.
 """
 
 import argparse
@@ -23,13 +23,12 @@ from joblib import load
 from src import FAMEDescriptors, compute_metrics
 
 NUM_BOOTSTRAPS = 1000
-THRESHOLD = 0.2
 
 
 def parse_arguments() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
-        description="Tests a trained re-implementation of the FAME.AL model."
+        description="Tests a trained re-implementation of the FAME3 model."
     )
 
     parser.add_argument(
@@ -62,6 +61,15 @@ def parse_arguments() -> argparse.Namespace:
         help="Max. atom environment radius in number of bonds",
         type=int,
     )
+    parser.add_argument(
+        "-t",
+        dest="threshold",
+        required=False,
+        metavar="<binary decision threshold>",
+        default=0.2,
+        help="Binary decision threshold",
+        type=float,
+    )
 
     parse_args = parser.parse_args()
 
@@ -82,6 +90,7 @@ if __name__ == "__main__":
 
     descriptors_generator = FAMEDescriptors(args.radius)
     (
+        mol_num_ids,
         mol_ids,
         atom_ids,
         som_labels,
@@ -90,14 +99,14 @@ if __name__ == "__main__":
         args.input_file, args.out_folder, has_soms=True
     )
 
-    print(f"Testing data: {len(set(mol_ids))} molecules")
+    print(f"Testing data: {len(set(mol_num_ids))} molecules")
 
     print("Loading model...")
     clf = load(args.model_file)
 
     print("Testing model...")
     y_prob = clf.predict_proba(descriptors)[:, 1]
-    y_pred = (y_prob > THRESHOLD).astype(int)
+    y_pred = (y_prob > args.threshold).astype(int)
 
     metrics: Dict[str, List[float]] = {
         "AUROC": [],
@@ -111,13 +120,14 @@ if __name__ == "__main__":
 
     for i in range(NUM_BOOTSTRAPS):
         print(f"Bootstrap {i + 1}...")
-        sampled_mol_ids = np.random.choice(
-            list(set(mol_ids)), len(set(mol_ids)), replace=True
+        sampled_mol_num_ids = np.random.choice(
+            list(set(mol_num_ids)), len(set(mol_num_ids)), replace=True
         )
-        mask = np.zeros(len(mol_ids), dtype=bool)
-        for mol_id in sampled_mol_ids:
-            mask = mask | (mol_ids == mol_id)
+        mask = np.zeros(len(mol_num_ids), dtype=bool)
+        for mol_num_id in sampled_mol_num_ids:
+            mask = mask | (mol_num_ids == mol_num_id)
         print("Computing metrics...")
+        assert som_labels is not None, "SOM labels are missing"
         (
             auroc,
             average_precision,
@@ -126,7 +136,9 @@ if __name__ == "__main__":
             precision,
             recall,
             top2,
-        ) = compute_metrics(som_labels[mask], y_prob[mask], y_pred[mask], mol_ids[mask])
+        ) = compute_metrics(
+            som_labels[mask], y_prob[mask], y_pred[mask], mol_num_ids[mask]
+        )
 
         metrics["AUROC"].append(auroc)
         metrics["Average precision"].append(average_precision)
@@ -144,6 +156,7 @@ if __name__ == "__main__":
             )
     print(f"Metrics saved to {metrics_file}")
 
+    assert som_labels is not None, "SOM labels are missing"
     predictions_file = os.path.join(args.out_folder, "predictions.csv")
     with open(predictions_file, "w", encoding="UTF-8", newline="") as file:
         writer = csv.writer(file)

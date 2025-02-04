@@ -1,11 +1,12 @@
-"""Trains a re-implementation of the FAME.AL model.
+"""Trains a re-implementation of the FAME3 model.
 
 This script trains a random forest classifier using the FAME descriptors.
 The model is saved in the output folder as a joblib file.
 The hyperparameters of the model and the radius of the atom environment \
-    are not optimized in this script (see cv_hp_search.py). The former can \
-    set in the RandomForestClassifier constructor, and the latter can be set \
-    by changing the radius command line argument (default is 5).
+    are not optimized in this script (see cv_hp_search.py). \
+        The hyperparameters can be set in the RandomForestClassifier constructor. \
+            The radius can be set by changing the radius command line argument (default is 5).
+
 """
 
 import argparse
@@ -18,13 +19,11 @@ from sklearn.ensemble import RandomForestClassifier
 
 from src import FAMEDescriptors
 
-THRESHOLD = 0.2
-
 
 def parse_arguments() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
-        description="Trains a re-implementation of the FAME.AL model."
+        description="Trains a re-implementation of the FAME3 model."
     )
 
     parser.add_argument(
@@ -68,6 +67,7 @@ if __name__ == "__main__":
 
     descriptors_generator = FAMEDescriptors(args.radius)
     (
+        mol_num_ids,
         mol_ids,
         atom_ids,
         som_labels,
@@ -76,7 +76,7 @@ if __name__ == "__main__":
         args.input_file, args.out_folder, has_soms=True
     )
 
-    print(f"Training data: {len(set(mol_ids))} molecules")
+    print(f"Training data: {len(set(mol_num_ids))} molecules")
 
     print("Training model...")
     clf = RandomForestClassifier(
