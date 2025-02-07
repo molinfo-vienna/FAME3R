@@ -37,3 +37,6 @@ disable = [
     "R0801",  # duplicate-code
     "R0914",  # too-many-locals
 ]
+
+[tool.isort]
+profile = "black"
