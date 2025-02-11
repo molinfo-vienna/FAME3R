@@ -34,5 +34,5 @@ def test_descriptor_dimensions(mol):
     ), "descriptors are generated for each non-hydrogen atom"
 
     assert all(
-        [len(atom_desc) == len(labels) for _, atom_desc in desc.values()]
+        len(atom_desc) == len(labels) for _, atom_desc in desc.values()
     ), "each atom has the correct amount of descriptors"
