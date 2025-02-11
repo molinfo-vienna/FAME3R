@@ -25,7 +25,7 @@ FAME3R: a re-implementation of the FAME3 model.
 
 #### Determining the optimal hyperparameters via k-fold cross-validation
 
-```python scripts/cv_hp_search.py -i INPUT_FILE -o OUTPUT_FOLDER -r RADIUS[OPTIONAL, DEFAULT=5] -r NUMFOLDS[OPTIONAL, DEFAULT=10]```
+```python scripts/cv_hp_search.py -i INPUT_FILE -o OUTPUT_FOLDER -r RADIUS[OPTIONAL, DEFAULT=5] -n NUMFOLDS[OPTIONAL, DEFAULT=10]```
 
 #### Training a model
 
