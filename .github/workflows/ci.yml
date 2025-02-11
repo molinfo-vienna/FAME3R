@@ -27,7 +27,7 @@ jobs:
 
     - name: Run flake8
       if: success() || failure()
-      run: flake8 --max-line-length=100 .
+      run: flake8 .
 
     - name: Run isort
       if: success() || failure()
@@ -35,7 +35,7 @@ jobs:
 
     - name: Run mypy
       if: success() || failure()
-      run: mypy --config-file=mypy.ini .
+      run: mypy .
 
     - name: Run pylint
       if: success() || failure()
