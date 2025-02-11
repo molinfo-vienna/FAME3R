@@ -22,21 +22,27 @@ jobs:
       run: pip install -r requirements.txt -r requirements-dev.txt
 
     - name: Run black
+      if: success() || failure()
       run: black --check .
 
     - name: Run flake8
+      if: success() || failure()
       run: flake8 --max-line-length=100 .
 
     - name: Run isort
+      if: success() || failure()
       run: isort --check .
 
     - name: Run mypy
+      if: success() || failure()
       run: mypy --config-file=mypy.ini .
 
     - name: Run pylint
+      if: success() || failure()
       run: pylint .
 
     - name: Run pydocstyle
+      if: success() || failure()
       run: pydocstyle .
 
   test:
