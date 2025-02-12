@@ -1,9 +1,10 @@
 from pathlib import Path
 
+import numpy as np
 import pytest
 from CDPL import Chem
 
-from src.compute_descriptors import FAMEDescriptors
+from src.compute_descriptors import DescriptorGenerator, FAMEDescriptors
 
 inputs_dir: Path = Path(__file__).parent.joinpath("inputs")
 
@@ -42,3 +43,16 @@ def test_different_radius_values(mol, radius):
     assert (
         len(labels) == expected_length
     ), f"the correct amount of descriptors is generated for {radius=}"
+
+
+def test_molecule_and_atom_generators_agree(mol):
+    _, desc = FAMEDescriptors(radius=2)._process_molecule(mol, has_soms=False)
+    atom_desc_generator = DescriptorGenerator(radius=2)
+
+    for (_, atom_id), (_, atom_desc_from_mol) in desc.items():
+        atom = mol.getAtom(atom_id)
+        _, atom_desc_from_atom = atom_desc_generator.generate_descriptors(atom, mol)
+
+        assert np.array_equal(
+            atom_desc_from_atom, atom_desc_from_mol
+        ), "atom and molecule descriptor generators produce the same results"
