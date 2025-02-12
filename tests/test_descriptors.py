@@ -9,11 +9,7 @@ from src.compute_descriptors import DescriptorGenerator, FAMEDescriptors
 inputs_dir: Path = Path(__file__).parent.joinpath("inputs")
 
 
-@pytest.fixture(
-    params=[
-        inputs_dir.joinpath("IMATINIB.sdf"),
-    ]
-)
+@pytest.fixture(params=inputs_dir.glob("single/*.sdf"))
 def mol(request) -> Chem.BasicMolecule:
     read_mol = Chem.BasicMolecule()
     reader = Chem.MoleculeReader(request.param.as_posix())
