@@ -32,3 +32,13 @@ def test_descriptor_dimensions(mol):
     assert all(
         [len(atom_desc) == len(labels) for _, atom_desc in desc.values()]
     ), "each atom has the correct amount of descriptors"
+
+
+@pytest.mark.parametrize("radius", [0, 1, 2, 3, 4, 5])
+def test_different_radius_values(mol, radius):
+    expected_length = 286 * (radius + 1) + 4
+    labels, _ = FAMEDescriptors(radius=radius)._process_molecule(mol, has_soms=False)
+
+    assert (
+        len(labels) == expected_length
+    ), f"the correct amount of descriptors is generated for {radius=}"
