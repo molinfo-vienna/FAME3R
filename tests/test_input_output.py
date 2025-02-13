@@ -1,3 +1,7 @@
+# pylint: disable=redefined-outer-name
+# pylint: disable=protected-access
+# pylint: disable=missing-module-docstring,missing-function-docstring
+
 from pathlib import Path
 
 import numpy as np
