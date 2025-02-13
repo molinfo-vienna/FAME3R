@@ -34,8 +34,10 @@ dev = [
 
 [tool.pylint.messages_control]
 disable = [
-    "R0801",  # duplicate-code
-    "R0914",  # too-many-locals
+    "no-member", # needed because CDPKit does not include module stub files
+    "too-few-public-methods",
+    "duplicate-code",
+    "too-many-locals",
 ]
 
 [tool.isort]

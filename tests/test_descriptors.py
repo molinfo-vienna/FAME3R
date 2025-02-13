@@ -1,3 +1,7 @@
+# pylint: disable=redefined-outer-name
+# pylint: disable=protected-access
+# pylint: disable=missing-module-docstring,missing-function-docstring
+
 from pathlib import Path
 
 import pytest
@@ -30,5 +34,5 @@ def test_descriptor_dimensions(mol):
     ), "descriptors are generated for each non-hydrogen atom"
 
     assert all(
-        [len(atom_desc) == len(labels) for _, atom_desc in desc.values()]
+        len(atom_desc) == len(labels) for _, atom_desc in desc.values()
     ), "each atom has the correct amount of descriptors"
