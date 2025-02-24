@@ -70,7 +70,7 @@ class MoleculeProcessor:
     @staticmethod
     def extract_structure_data(mol: Chem.Molecule) -> dict:
         """Extract structure data from a molecule."""
-        struct_data = Chem.getStructureData(mol)
+        struct_data = Chem.getStructureData(mol) if Chem.hasStructureData(mol) else []
         data_dict = {}
 
         for entry in struct_data:
