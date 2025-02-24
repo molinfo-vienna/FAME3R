@@ -1,18 +1,14 @@
 """Module for computing FAME descriptors for a given molecule."""
 
 import ast
+import csv
 import os
 import sys
-import warnings
 from pathlib import Path
 from typing import List, Optional, Tuple
 
 import numpy as np
-import pandas as pd
 from CDPL import Chem, ForceField, MolProp
-
-# Suppress pandas performance warning
-warnings.simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
 
 SYBYL_ATOM_TYPE_IDX_CDPKIT = [
     1,
