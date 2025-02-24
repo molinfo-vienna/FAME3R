@@ -1,6 +1,7 @@
 """Module for computing FAME descriptors for a given molecule."""
 
 import ast
+import csv
 import os
 import sys
 import warnings
@@ -319,16 +320,20 @@ class FAMEDescriptors:
         descriptors_lst: List[List[float]] = []
 
         with (
-            open(out_not_calculated, "w", encoding="UTF-8") as f_not_calc,
-            open(out_descriptors, "w", encoding="UTF-8") as f_desc,
+            open(out_not_calculated, "w", encoding="UTF-8") as f_not_calc_writer,
+            open(out_descriptors, "w", encoding="UTF-8") as f_desc_writer,
         ):
-            f_not_calc.write("sybyl_atom_type_id,sybyl_atom_type,mol_id\n")
+            f_not_calc_csv = csv.writer(f_not_calc_writer)
+            f_desc_csv = csv.writer(f_desc_writer)
+
+            f_not_calc_csv.writerow(["sybyl_atom_type_id", "sybyl_atom_type", "mol_id"])
+
             i = 0
             try:
                 while reader.read(mol):
                     try:
                         MoleculeProcessor.perceive_mol(mol)
-                        if self._has_uncommon_element(mol, f_not_calc):
+                        if self._has_uncommon_element(mol, f_not_calc_csv):
                             continue
 
                         descriptor_names, property_dict = self._process_molecule(
@@ -336,10 +341,9 @@ class FAMEDescriptors:
                         )
 
                         if i == 0:
-                            f_desc.write(
-                                "mol_num_id,mol_id,atom_id,som_label,"
-                                + ",".join(descriptor_names)
-                                + "\n"
+                            f_desc_csv.writerow(
+                                ["mol_num_id", "mol_id", "atom_id", "som_label"]
+                                + list(descriptor_names)
                             )
                         i += 1
 
@@ -353,10 +357,8 @@ class FAMEDescriptors:
                             som_labels.append(som_label)
                             descriptors_lst.append(list(descriptors))
 
-                            f_desc.write(
-                                f"{i},{mol_id},{atom_id},{som_label},"
-                                + ",".join(map(str, descriptors))
-                                + "\n"
+                            f_desc_csv.writerow(
+                                [i, mol_id, atom_id, som_label] + list(descriptors)
                             )
                     except RuntimeError as e:
                         sys.exit(f"Error: processing of molecule failed:\n{e}")
@@ -377,9 +379,7 @@ class FAMEDescriptors:
         for atom in mol.atoms:
             atom_type = Chem.getSybylType(atom)
             if atom_type not in SYBYL_ATOM_TYPE_IDX_CDPKIT:
-                f_not_calc.write(
-                    f"{atom_type},{Chem.getSybylAtomTypeString(atom_type)},X\n"
-                )
+                f_not_calc.writerow([atom_type, Chem.getSybylAtomTypeString(atom_type)])
                 uncommon_element = True
         return uncommon_element
 
