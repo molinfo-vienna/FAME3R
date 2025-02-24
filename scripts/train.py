@@ -53,7 +53,7 @@ def parse_arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
-if __name__ == "__main__":
+def main():
     start_time = datetime.now()
 
     args = parse_arguments()
@@ -93,3 +93,7 @@ if __name__ == "__main__":
     print("Finished in:", datetime.now() - start_time)
 
     sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()
