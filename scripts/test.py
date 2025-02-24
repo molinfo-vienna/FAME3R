@@ -15,7 +15,6 @@ import os
 import sys
 from datetime import datetime
 from statistics import mean, stdev
-from typing import Dict, List
 
 import numpy as np
 from joblib import load
@@ -109,7 +108,7 @@ def main():
     y_prob = clf.predict_proba(descriptors)[:, 1]
     y_pred = (y_prob > args.threshold).astype(int)
 
-    metrics: Dict[str, List[float]] = {
+    metrics: dict[str, list[float]] = {
         "AUROC": [],
         "Average precision": [],
         "F1": [],
