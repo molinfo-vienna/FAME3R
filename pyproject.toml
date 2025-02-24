@@ -33,6 +33,18 @@ dev = [
   "pytest",
 ]
 
+[tool.hatch.build.targets.sdist]
+include = [
+  "fame3r",
+  "scripts",
+]
+
+[tool.hatch.build.targets.wheel]
+include = [
+  "fame3r",
+  "scripts",
+]
+
 [tool.pylint.messages_control]
 disable = [
     "no-member", # needed because CDPKit does not include module stub files
