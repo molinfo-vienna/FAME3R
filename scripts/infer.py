@@ -14,7 +14,7 @@ from datetime import datetime
 
 from joblib import load
 
-from src import FAMEDescriptors
+from fame3r import FAMEDescriptors
 
 
 def parse_arguments() -> argparse.Namespace:

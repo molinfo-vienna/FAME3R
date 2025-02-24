@@ -20,7 +20,7 @@ from typing import Dict, List
 import numpy as np
 from joblib import load
 
-from src import FAMEDescriptors, compute_metrics
+from fame3r import FAMEDescriptors, compute_metrics
 
 NUM_BOOTSTRAPS = 1000
 

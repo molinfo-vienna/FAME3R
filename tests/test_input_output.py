@@ -6,7 +6,7 @@ from pathlib import Path
 
 import numpy as np
 
-from src.compute_descriptors import FAMEDescriptors
+from fame3r.compute_descriptors import FAMEDescriptors
 
 in_file_path: Path = Path(__file__).parent.joinpath("inputs/COMBINED.sdf")
 

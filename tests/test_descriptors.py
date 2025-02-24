@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 from CDPL import Chem
 
-from src.compute_descriptors import DescriptorGenerator, FAMEDescriptors
+from fame3r.compute_descriptors import DescriptorGenerator, FAMEDescriptors
 
 inputs_dir: Path = Path(__file__).parent.joinpath("inputs")
 

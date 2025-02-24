@@ -17,7 +17,7 @@ from datetime import datetime
 from joblib import dump
 from sklearn.ensemble import RandomForestClassifier
 
-from src import FAMEDescriptors
+from fame3r import FAMEDescriptors
 
 
 def parse_arguments() -> argparse.Namespace:
