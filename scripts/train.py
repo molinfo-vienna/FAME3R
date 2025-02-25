@@ -53,8 +53,8 @@ def parse_arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
-# pylint: disable-next=missing-function-docstring
 def main():
+    """Application entry point."""
     start_time = datetime.now()
 
     args = parse_arguments()
