@@ -18,7 +18,6 @@ import sys
 from collections import Counter
 from datetime import datetime
 from statistics import mean, stdev
-from typing import Dict, List
 
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
@@ -129,7 +128,7 @@ def main():
             file.write(f"{param}: {value}\n")
     print(f"Best hyperparameters saved to {best_params_file}")
 
-    metrics: Dict[str, List[float]] = {
+    metrics: dict[str, list[float]] = {
         "AUROC": [],
         "Average precision": [],
         "F1": [],

@@ -5,7 +5,6 @@ import csv
 import os
 import sys
 from pathlib import Path
-from typing import List, Optional, Tuple
 
 import numpy as np
 from CDPL import Chem, ForceField, MolProp
@@ -85,7 +84,7 @@ class DescriptorGenerator:
 
     def generate_descriptors(
         self, ctr_atom: Chem.Atom, molgraph: Chem.MolecularGraph
-    ) -> tuple:
+    ) -> tuple[list[str], np.ndarray]:
         """Generate descriptors for a given atom in a molecule.
 
         Args:
@@ -227,7 +226,7 @@ class FAMEDescriptors:
 
     def _process_molecule(
         self, mol: Chem.Molecule, has_soms: bool
-    ) -> Tuple[Tuple, dict]:
+    ) -> tuple[tuple, dict]:
         """Process a molecule and generate descriptors for each atom.
 
         Args:
@@ -260,7 +259,7 @@ class FAMEDescriptors:
 
     def compute_fame_descriptors(
         self, in_file: str, out_folder: str, has_soms: bool
-    ) -> Tuple[np.ndarray, list[str], np.ndarray, Optional[np.ndarray], np.ndarray]:
+    ) -> tuple[np.ndarray, list[str], np.ndarray, np.ndarray | None, np.ndarray]:
         """Compute FAME descriptors for a given molecule.
 
         Args:
@@ -286,7 +285,7 @@ class FAMEDescriptors:
 
     def _get_output_file_paths(
         self, in_file_path: Path, out_folder_path: Path
-    ) -> Tuple[Path, Path]:
+    ) -> tuple[Path, Path]:
         """Generate output file paths for descriptors and not-calculated compounds."""
         out_not_calculated = (
             out_folder_path
@@ -303,16 +302,16 @@ class FAMEDescriptors:
         out_not_calculated: Path,
         out_descriptors: Path,
         has_soms: bool,
-    ) -> Tuple[np.ndarray, List[str], np.ndarray, Optional[np.ndarray], np.ndarray]:
+    ) -> tuple[np.ndarray, list[str], np.ndarray, np.ndarray | None, np.ndarray]:
         """Compute and save descriptors from molecules."""
         reader = Chem.FileSDFMoleculeReader(in_file)
         mol = Chem.BasicMolecule()
 
-        mol_num_ids: List[int] = []
-        mol_ids: List[str] = []
-        atom_ids: List[int] = []
-        som_labels: List[int] = []
-        descriptors_lst: List[List[float]] = []
+        mol_num_ids: list[int] = []
+        mol_ids: list[str] = []
+        atom_ids: list[int] = []
+        som_labels: list[int] = []
+        descriptors_lst: list[list[float]] = []
 
         with (
             open(out_not_calculated, "w", encoding="UTF-8") as f_not_calc_writer,
@@ -380,7 +379,7 @@ class FAMEDescriptors:
 
     def _read_precomputed_descriptors(
         self, out_descriptors: Path, has_soms: bool
-    ) -> Tuple[np.ndarray, List[str], np.ndarray, Optional[np.ndarray], np.ndarray]:
+    ) -> tuple[np.ndarray, list[str], np.ndarray, np.ndarray | None, np.ndarray]:
         """Read previously computed descriptors from a file."""
         print(f"Reading pre-calculated descriptors from {out_descriptors}")
 
