@@ -75,6 +75,8 @@ def parse_arguments() -> argparse.Namespace:
 
     return parse_args
 
+
+# pylint: disable-next=missing-function-docstring
 def main():
     start_time = datetime.now()
 
@@ -175,6 +177,7 @@ def main():
     print("Finished in:", datetime.now() - start_time)
 
     sys.exit(0)
+
 
 if __name__ == "__main__":
     main()
