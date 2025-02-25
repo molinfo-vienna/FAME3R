@@ -69,8 +69,8 @@ def main():
     descriptors_generator = FAMEDescriptors(args.radius)
     (
         mol_num_ids,
-        mol_ids,
-        atom_ids,
+        _atom_ids,
+        _atom_ids,
         som_labels,
         descriptors,
     ) = descriptors_generator.compute_fame_descriptors(
