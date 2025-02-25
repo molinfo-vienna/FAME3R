@@ -89,8 +89,8 @@ def main():
     descriptors_generator = FAMEDescriptors(args.radius)
     (
         mol_num_ids,
-        mol_ids,
-        atom_ids,
+        _mol_ids,
+        _atom_ids,
         som_labels,
         descriptors,
     ) = descriptors_generator.compute_fame_descriptors(
@@ -161,21 +161,21 @@ def main():
 
         print("Searching for best decision threshold...")
         thresholds = np.linspace(0.1, 0.9, 9)
-        BEST_MCC = -1
-        BEST_THRESHOLD = 0.5
+        best_mcc = -1
+        best_threshold = 0.5
 
         for threshold in thresholds:
             y_pred = (y_prob > threshold).astype(int)
             mcc = matthews_corrcoef(y_true_val, y_pred)
 
-            if mcc > BEST_MCC:
-                BEST_MCC = mcc
-                BEST_THRESHOLD = threshold
+            if mcc > best_mcc:
+                best_mcc = mcc
+                best_threshold = threshold
 
-        print(f"Best threshold for fold {i+1}: {BEST_THRESHOLD}")
-        best_thresholds.append(BEST_THRESHOLD)
+        print(f"Best threshold for fold {i+1}: {best_threshold}")
+        best_thresholds.append(best_threshold)
 
-        y_pred = (y_prob > BEST_THRESHOLD).astype(int)
+        y_pred = (y_prob > best_threshold).astype(int)
 
         print("Computing metrics...")
         (
