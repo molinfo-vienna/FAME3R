@@ -69,7 +69,7 @@ def main():
     descriptors_generator = FAMEDescriptors(args.radius)
     (
         mol_num_ids,
-        _atom_ids,
+        _mol_ids,
         _atom_ids,
         som_labels,
         descriptors,
