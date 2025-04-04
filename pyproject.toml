@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fame3r"
-version = "0.0.2"
+version = "1.0.0"
 description = "FAME3R: a re-implementation of the FAME3 model"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -14,7 +14,7 @@ authors = [
 ]
 
 dependencies = [
-  "CDPKit==1.1.1",
+  "CDPKit==1.2.3",
   "joblib==1.4.2",
   "numpy>=1.26.4, <2.0.0",
   "pandas>=2.2.2",

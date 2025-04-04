@@ -31,7 +31,7 @@ def parse_arguments() -> argparse.Namespace:
         dest="input_file",
         required=True,
         metavar="<training data file>",
-        help="Trainig data file",
+        help="Training data file",
     )
     parser.add_argument(
         "-o",

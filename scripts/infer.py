@@ -8,13 +8,15 @@ The decision threshold can be changed by changing the threshold argument. Defaul
 
 import argparse
 import csv
+import glob
 import os
 import sys
 from datetime import datetime
 
+import pandas as pd
 from joblib import load
 
-from fame3r import FAMEDescriptors
+from fame3r import FAMEDescriptors, FAMEScores
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -32,10 +34,10 @@ def parse_arguments() -> argparse.Namespace:
     )
     parser.add_argument(
         "-m",
-        dest="model_file",
+        dest="model_folder",
         required=True,
-        metavar="<Model file>",
-        help="Model file",
+        metavar="<Model folder>",
+        help="Model folder",
     )
     parser.add_argument(
         "-o",
@@ -83,32 +85,52 @@ def main():
 
     descriptors_generator = FAMEDescriptors(args.radius)
     (
-        mol_num_ids_test,
-        mol_ids_test,
-        atom_ids_test,
+        mol_num_ids,
+        mol_ids,
+        atom_ids,
         _,
-        descriptors_test,
+        descriptors,
     ) = descriptors_generator.compute_fame_descriptors(
         args.input_file, args.out_folder, has_soms=False
     )
 
-    print(f"Data: {len(set(mol_num_ids_test))} molecules")
+    print(f"Data: {len(set(mol_num_ids))} molecules")
 
     print("Loading model...")
-    clf = load(args.model_file)
+    clf = load(os.path.join(args.model_folder, "model.joblib"))
 
-    print("Testing model...")
-    predictions = clf.predict_proba(descriptors_test)[:, 1]
+    print("Predicting SOMs...")
+    predictions = clf.predict_proba(descriptors)[:, 1]
     predictions_binary = (predictions > args.threshold).astype(int)
+
+    print("Computing FAME scores...")
+    # Get the path of the CSV file that ends with "descriptors.csv"
+    csv_files = glob.glob(os.path.join(args.model_folder, "*descriptors.csv"))
+
+    if len(csv_files) == 1:
+        train_descriptors_df = pd.read_csv(csv_files[0])
+    else:
+        raise FileNotFoundError(
+            f"Expected one CSV file ending with 'descriptors.csv', but found {len(csv_files)}."
+        )
+    train_descriptors = train_descriptors_df.drop(
+        columns=["mol_num_id", "mol_id", "atom_id", "som_label"]
+    ).values
+    fame_scores_generator = FAMEScores(train_descriptors)
+    fame_scores = fame_scores_generator.compute_fame_scores(descriptors)
 
     predictions_file = os.path.join(args.out_folder, "predictions.csv")
     with open(predictions_file, "w", encoding="UTF-8", newline="") as file:
         writer = csv.writer(file)
-        writer.writerow(["mol_id", "atom_id", "predictions", "predictions_binary"])
-        for mol_id, atom_id, prediction, prediction_binary in zip(
-            mol_ids_test, atom_ids_test, predictions, predictions_binary
+        writer.writerow(
+            ["mol_id", "atom_id", "predictions", "predictions_binary", "fame_scores"]
+        )
+        for mol_id, atom_id, prediction, prediction_binary, fame_score in zip(
+            mol_ids, atom_ids, predictions, predictions_binary, fame_scores
         ):
-            writer.writerow([mol_id, atom_id, prediction, prediction_binary])
+            writer.writerow(
+                [mol_id, atom_id, prediction, prediction_binary, fame_score]
+            )
     print(f"Predictions saved to {predictions_file}")
 
     print("Finished in:", datetime.now() - start_time)

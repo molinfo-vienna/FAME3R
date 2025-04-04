@@ -11,15 +11,17 @@ The decision threshold can be changed by changing the threshold argument. Defaul
 
 import argparse
 import csv
+import glob
 import os
 import sys
 from datetime import datetime
 from statistics import mean, stdev
 
 import numpy as np
+import pandas as pd
 from joblib import load
 
-from fame3r import FAMEDescriptors, compute_metrics
+from fame3r import FAMEDescriptors, FAMEScores, compute_metrics
 
 NUM_BOOTSTRAPS = 1000
 
@@ -39,10 +41,10 @@ def parse_arguments() -> argparse.Namespace:
     )
     parser.add_argument(
         "-m",
-        dest="model_file",
+        dest="model_folder",
         required=True,
-        metavar="<Model file>",
-        help="Model file",
+        metavar="<Model folder>",
+        help="Model folder",
     )
     parser.add_argument(
         "-o",
@@ -102,12 +104,30 @@ def main():
     print(f"Testing data: {len(set(mol_num_ids))} molecules")
 
     print("Loading model...")
-    clf = load(args.model_file)
+    model_file = os.path.join(args.model_folder, "model.joblib")
+    clf = load(model_file)
 
     print("Testing model...")
     y_prob = clf.predict_proba(descriptors)[:, 1]
     y_pred = (y_prob > args.threshold).astype(int)
 
+    print("Computing FAME scores...")
+    # Get the path of the CSV file that ends with "descriptors.csv"
+    csv_files = glob.glob(os.path.join(args.model_folder, "*descriptors.csv"))
+
+    if len(csv_files) == 1:
+        train_descriptors_df = pd.read_csv(csv_files[0])
+    else:
+        raise FileNotFoundError(
+            f"Expected one CSV file ending with 'descriptors.csv', but found {len(csv_files)}."
+        )
+    train_descriptors = train_descriptors_df.drop(
+        columns=["mol_num_id", "mol_id", "atom_id", "som_label"]
+    ).values
+    fame_scores_generator = FAMEScores(train_descriptors)
+    fame_scores = fame_scores_generator.compute_fame_scores(descriptors)
+
+    print("Computing metrics...")
     metrics: dict[str, list[float]] = {
         "AUROC": [],
         "Average precision": [],
@@ -160,16 +180,26 @@ def main():
     predictions_file = os.path.join(args.out_folder, "predictions.csv")
     with open(predictions_file, "w", encoding="UTF-8", newline="") as file:
         writer = csv.writer(file)
-        writer.writerow(["mol_id", "atom_id", "y_prob", "y_pred", "y_true"])
-        for mol_id, atom_id, prediction, prediction_binary, true_label in zip(
+        writer.writerow(
+            ["mol_id", "atom_id", "y_prob", "y_pred", "y_true", "fame_score"]
+        )
+        for (
+            mol_id,
+            atom_id,
+            prediction,
+            prediction_binary,
+            true_label,
+            fame_score,
+        ) in zip(
             mol_ids,
             atom_ids,
             y_prob,
             y_pred,
             som_labels,
+            fame_scores,
         ):
             writer.writerow(
-                [mol_id, atom_id, prediction, prediction_binary, true_label]
+                [mol_id, atom_id, prediction, prediction_binary, true_label, fame_score]
             )
     print(f"Predictions saved to {predictions_file}")
 

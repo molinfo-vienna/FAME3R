@@ -4,7 +4,7 @@
 #
 #    pip-compile --output-file=requirements.txt pyproject.toml
 #
-cdpkit==1.1.1
+cdpkit==1.2.3
     # via fame3r (pyproject.toml)
 joblib==1.4.2
     # via
