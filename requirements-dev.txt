@@ -10,7 +10,7 @@ black==25.1.0
     # via fame3r (pyproject.toml)
 build==1.2.2.post1
     # via fame3r (pyproject.toml)
-cdpkit==1.1.1
+cdpkit==1.2.3
     # via fame3r (pyproject.toml)
 click==8.1.8
     # via black
