@@ -9,7 +9,7 @@ This script saves the optimal k-fold CV metrics (mean and standard deviation) \
     of the model to a text file.
 The radius of the atom environment is not part of the hyperparameter search, \
     but can be set by changing the radius argument. Default is 5.
-The number of folds can be set by changing the numFolds argument. Default is 10.
+The number of folds can be set by changing the num_folds argument. Default is 10.
 """
 
 import argparse
@@ -59,7 +59,7 @@ def parse_arguments() -> argparse.Namespace:
     )
     parser.add_argument(
         "-n",
-        dest="numFolds",
+        dest="num_folds",
         required=False,
         metavar="<number of cross-validation folds>",
         default=10,
@@ -104,7 +104,7 @@ def main():
 
     scorer = make_scorer(average_precision_score, greater_is_better=True)
 
-    kf = GroupKFold(n_splits=args.numFolds, random_state=42, shuffle=True)
+    kf = GroupKFold(n_splits=args.num_folds, random_state=42, shuffle=True)
 
     print("Performing hyperparameter optimization using GridSearchCV...")
     grid_search = GridSearchCV(
@@ -206,7 +206,9 @@ def main():
     print(f"Optimal threshold saved to {best_params_file}")
 
     # Save metrics
-    metrics_file = os.path.join(args.out_folder, f"{args.numFolds}_fold_cv_metrics.txt")
+    metrics_file = os.path.join(
+        args.out_folder, f"{args.num_folds}_fold_cv_metrics.txt"
+    )
     with open(metrics_file, "w", encoding="UTF-8") as file:
         for metric, scores in metrics.items():
             file.write(

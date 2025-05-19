@@ -1,3 +1,11 @@
+## [1.0.3] - 2025-05-19
+### Added
+- Added important usage documentation
+### Changed
+### Fixed
+- Improved formatting/linting
+
+
 ## [1.0.2] - 2025-05-19
 ### Added
 - Optional computation of FAME scores via `--compute-fame-scores` flag in test and infer scripts

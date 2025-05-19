@@ -88,8 +88,10 @@ def main():
 
     print("Computing descriptors...")
     descriptors_generator = FAMEDescriptors(args.radius)
-    mol_num_ids, mol_ids, atom_ids, _, descriptors = descriptors_generator.compute_fame_descriptors(
-        args.input_file, args.out_folder, has_soms=False
+    mol_num_ids, mol_ids, atom_ids, _, descriptors = (
+        descriptors_generator.compute_fame_descriptors(
+            args.input_file, args.out_folder, has_soms=False
+        )
     )
 
     print(f"Data: {len(set(mol_num_ids))} molecules")

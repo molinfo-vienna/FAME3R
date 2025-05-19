@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fame3r"
-version = "1.0.2"
+version = "1.0.3"
 description = "FAME3R: a re-implementation of the FAME3 model"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -58,6 +58,7 @@ disable = [
     "duplicate-code",
     "too-many-locals",
     "too-many-statements",
+    "consider-using-enumerate",
 ]
 
 [tool.isort]
