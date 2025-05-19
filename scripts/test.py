@@ -6,7 +6,8 @@ This script performs bootstrapping to estimate the uncertainty in the metrics.\
     The number of bootstraps can be set by changing the NUM_BOOTSTRAPS variable. Default is 1000.
 The radius of the atom environment is not part of the hyperparameter search, \
     but can be set by changing the radius argument. Default is 5.
-The decision threshold can be changed by changing the threshold argument. Default is 0.2.
+The decision threshold can be changed by changing the threshold argument. Default is 0.3.
+The script also computes FAME scores if the -fs flag is set.
 """
 
 import argparse
@@ -50,8 +51,8 @@ def parse_arguments() -> argparse.Namespace:
         "-o",
         dest="out_folder",
         required=True,
-        metavar="<output folder>",
-        help="Model output location",
+        metavar="<Output folder>",
+        help="Output location",
     )
     parser.add_argument(
         "-r",
@@ -67,9 +68,15 @@ def parse_arguments() -> argparse.Namespace:
         dest="threshold",
         required=False,
         metavar="<binary decision threshold>",
-        default=0.2,
+        default=0.3,
         help="Binary decision threshold",
         type=float,
+    )
+    parser.add_argument(
+        "-fs",
+        dest="compute_fame_scores",
+        action="store_true",
+        help="Compute FAME scores (optional)",
     )
 
     parse_args = parser.parse_args()
@@ -89,15 +96,8 @@ def main():
         print("The new output folder is created.")
 
     print("Computing descriptors...")
-
     descriptors_generator = FAMEDescriptors(args.radius)
-    (
-        mol_num_ids,
-        mol_ids,
-        atom_ids,
-        som_labels,
-        descriptors,
-    ) = descriptors_generator.compute_fame_descriptors(
+    mol_num_ids, mol_ids, atom_ids, som_labels, descriptors = descriptors_generator.compute_fame_descriptors(
         args.input_file, args.out_folder, has_soms=True
     )
 
@@ -111,21 +111,21 @@ def main():
     y_prob = clf.predict_proba(descriptors)[:, 1]
     y_pred = (y_prob > args.threshold).astype(int)
 
-    print("Computing FAME scores...")
-    # Get the path of the CSV file that ends with "descriptors.csv"
-    csv_files = glob.glob(os.path.join(args.model_folder, "*descriptors.csv"))
-
-    if len(csv_files) == 1:
-        train_descriptors_df = pd.read_csv(csv_files[0])
-    else:
-        raise FileNotFoundError(
-            f"Expected one CSV file ending with 'descriptors.csv', but found {len(csv_files)}."
-        )
-    train_descriptors = train_descriptors_df.drop(
-        columns=["mol_num_id", "mol_id", "atom_id", "som_label"]
-    ).values
-    fame_scores_generator = FAMEScores(train_descriptors)
-    fame_scores = fame_scores_generator.compute_fame_scores(descriptors)
+    fame_scores = None
+    if args.compute_fame_scores:
+        print("Computing FAME scores...")
+        csv_files = glob.glob(os.path.join(args.model_folder, "*descriptors.csv"))
+        if len(csv_files) == 1:
+            train_descriptors_df = pd.read_csv(csv_files[0])
+        else:
+            raise FileNotFoundError(
+                f"Expected one CSV file ending with 'descriptors.csv', but found {len(csv_files)}."
+            )
+        train_descriptors = train_descriptors_df.drop(
+            columns=["mol_num_id", "mol_id", "atom_id", "som_label"]
+        ).values
+        fame_scores_generator = FAMEScores(train_descriptors)
+        fame_scores = fame_scores_generator.compute_fame_scores(descriptors)
 
     print("Computing metrics...")
     metrics: dict[str, list[float]] = {
@@ -180,29 +180,24 @@ def main():
     predictions_file = os.path.join(args.out_folder, "predictions.csv")
     with open(predictions_file, "w", encoding="UTF-8", newline="") as file:
         writer = csv.writer(file)
-        writer.writerow(
-            ["mol_id", "atom_id", "y_prob", "y_pred", "y_true", "fame_score"]
-        )
-        for (
-            mol_id,
-            atom_id,
-            prediction,
-            prediction_binary,
-            true_label,
-            fame_score,
-        ) in zip(
-            mol_ids,
-            atom_ids,
-            y_prob,
-            y_pred,
-            som_labels,
-            fame_scores,
-        ):
-            writer.writerow(
-                [mol_id, atom_id, prediction, prediction_binary, true_label, fame_score]
-            )
-    print(f"Predictions saved to {predictions_file}")
+        headers = ["mol_id", "atom_id", "y_prob", "y_pred", "y_true"]
+        if args.compute_fame_scores:
+            headers.append("fame_score")
+        writer.writerow(headers)
 
+        for i in range(len(mol_ids)):
+            row = [
+                mol_ids[i],
+                atom_ids[i],
+                y_prob[i],
+                y_pred[i],
+                som_labels[i],
+            ]
+            if args.compute_fame_scores:
+                row.append(fame_scores[i])
+            writer.writerow(row)
+
+    print(f"Predictions saved to {predictions_file}")
     print("Finished in:", datetime.now() - start_time)
 
     sys.exit(0)

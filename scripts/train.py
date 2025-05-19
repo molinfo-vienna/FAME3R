@@ -37,8 +37,8 @@ def parse_arguments() -> argparse.Namespace:
         "-o",
         dest="out_folder",
         required=True,
-        metavar="<output folder>",
-        help="Model output location",
+        metavar="<Output folder>",
+        help="Output location",
     )
     parser.add_argument(
         "-r",
@@ -81,7 +81,7 @@ def main():
 
     print("Training model...")
     clf = RandomForestClassifier(
-        n_estimators=500,
+        n_estimators=100,
         max_features="sqrt",
         class_weight="balanced",
         random_state=42,

@@ -62,7 +62,7 @@ class FAMEScores:
                 temp_fame_scores.append(res[1])
                 # res[0] is the index of the datapoint and
                 # res[1] is the similarity score
-            fame_scores.append(mean(temp_fame_scores))
+            fame_scores.append(round(mean(temp_fame_scores),2))
 
         # Return the fame scores as a numpy array
         return np.array(fame_scores, dtype=float)
