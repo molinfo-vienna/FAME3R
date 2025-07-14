@@ -93,7 +93,7 @@ Note:
 - The script also computes FAME scores if the `-fs` flag is set. FAME scores are an indication of the well-representedness of the inference data compared to the training data and is defined as the Tanimoto similarity to the three nearest neighbors in the training data, computed on FAME descriptors. The higher the score, the most trustworthy the predictions.
 
 ```sh
-fame3r-test -i INPUT_FILE -m MODEL_FOLDER -o OUTPUT_FOLDER -r RADIUS[OPTIONAL, DEFAULT=5] -t THRESHOLD[OPTIONAL, DEFAULT=0.2] -fs[OPTIONAL]
+fame3r-test -i INPUT_FILE -m MODEL_FOLDER -o OUTPUT_FOLDER -r RADIUS[OPTIONAL, DEFAULT=5] -t THRESHOLD[OPTIONAL, DEFAULT=0.3] -fs[OPTIONAL]
 ```
 
 #### Inference mode: computing the SOMs of unlabeled data
@@ -101,5 +101,5 @@ fame3r-test -i INPUT_FILE -m MODEL_FOLDER -o OUTPUT_FOLDER -r RADIUS[OPTIONAL, D
 The `inference.py` script applies a trained model to unlabeled input data and saves the per-atom predictions to a CSV file. Each row contains the predicted SOM probability and its corresponding binary classification based on a decision threshold. If the `--compute_fame_scores` (-fs) flag is set, the script also computes FAME scores, which indicate how well each atom's environment is represented in the training data. These scores are calculated as the average Tanimoto similarity to the three nearest neighbors in the training set, based on FAME descriptors. The higher the score, the most trustworthy the predictions. The radius of the atom environment can be specified using the --radius argument (default: 5), and the decision threshold can be set via the --threshold argument (default: 0.3).
 
 ```sh
-fame3r-infer -i INPUT_FILE -m MODEL_FOLDER -o OUTPUT_FOLDER -r RADIUS[OPTIONAL, DEFAULT=5] -t THRESHOLD[OPTIONAL, DEFAULT=0.2] -fs[OPTIONAL]
+fame3r-infer -i INPUT_FILE -m MODEL_FOLDER -o OUTPUT_FOLDER -r RADIUS[OPTIONAL, DEFAULT=5] -t THRESHOLD[OPTIONAL, DEFAULT=0.3] -fs[OPTIONAL]
 ```
