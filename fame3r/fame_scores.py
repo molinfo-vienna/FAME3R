@@ -58,10 +58,8 @@ class FAMEScores:
             self.sim_calc.calculate(query, True)
             temp_fame_scores = []
             for k in range(self.num_nearest_neighbors):
-                res = self.sim_calc[k]
-                temp_fame_scores.append(res[1])
-                # res[0] is the index of the datapoint and
-                # res[1] is the similarity score
+                similarity_score = self.sim_calc.getSimilarity(k)
+                temp_fame_scores.append(similarity_score)
             fame_scores.append(round(mean(temp_fame_scores), 2))
 
         # Return the fame scores as a numpy array
