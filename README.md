@@ -12,7 +12,7 @@ conda create --name fame3r-env python=3.10
 conda activate fame3r-env
 ```
 
-3. Install package from PyPI:
+2. Install package from PyPI:
 
 ```sh
 pip install fame3r
