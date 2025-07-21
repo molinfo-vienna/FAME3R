@@ -17,11 +17,11 @@ import os
 import sys
 from datetime import datetime
 from statistics import mean, stdev
-from tqdm import tqdm
 
 import numpy as np
 import pandas as pd
 from joblib import load
+from tqdm import tqdm
 
 from fame3r import FAMEDescriptors, FAMEScores, compute_metrics
 
