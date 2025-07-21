@@ -86,7 +86,7 @@ Note:
 
 - The decision threshold can be changed by changing the `--threshold` command-line argument. Default is 0.3.
 
-- The script also computes FAME scores if the `-fs` flag is set. FAME scores are an indication of the well-representedness of the inference data compared to the training data and is defined as the Tanimoto similarity to the three nearest neighbors in the training data, computed on FAME descriptors. The higher the score, the most trustworthy the predictions.
+- If the `--compute_fame_scores` (-fs) flag is set, the script also computes FAME scores, which indicate how well each atom's environment is represented in the training data. These scores are calculated as the average Tanimoto similarity to the three nearest neighbors in the training set, based on FAME descriptors. The higher the score, the most trustworthy the predictions.
 
 ```sh
 fame3r-test -i INPUT_FILE -m MODEL_FOLDER -o OUTPUT_FOLDER -r RADIUS[OPTIONAL, DEFAULT=5] -t THRESHOLD[OPTIONAL, DEFAULT=0.3] -fs[OPTIONAL]
