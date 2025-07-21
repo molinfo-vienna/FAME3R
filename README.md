@@ -58,11 +58,9 @@ The trained model is saved as a .joblib file in the specified output folder.
 
 Note:
 
-- This script does not perform hyperparameter optimization or radius tuning. For that, see the section "Determining the optimal hyperparameters via K-fold cross-validation."
+- This script does not perform hyperparameter optimization or radius tuning. For that, see the section "Determining the optimal hyperparameters via K-fold cross-validation." You can adjust the model's hyperparameters in the `RandomForestClassifier` constructor within the script.
 
-- You can manually adjust the model's hyperparameters in the `RandomForestClassifier` constructor within the script.
-
-- The atom environment radius can be set via the `--radius` command-line argument (default: 5).
+- The atom environment radius can be changed with the optional `--radius` command-line argument (default: 5).
 
 ```sh
 fame3r-train -i INPUT_FILE -o OUTPUT_FOLDER -r RADIUS[OPTIONAL, DEFAULT=5]
@@ -82,11 +80,11 @@ Note:
 
 - This script performs bootstrapping to estimate the uncertainty in the metrics. The number of bootstraps can be set by changing the `NUM_BOOTSTRAPS` variable. Default is 1000.
 
-- The radius of the atom environment is not part of the hyperparameter search, but can be set by changing the `--radius` command-line argument. Default is 5.
-
-- The decision threshold can be changed by changing the `--threshold` command-line argument. Default is 0.3.
-
 - If the `--compute_fame_scores` (-fs) flag is set, the script also computes FAME scores, which indicate how well each atom's environment is represented in the training data. These scores are calculated as the average Tanimoto similarity to the three nearest neighbors in the training set, based on FAME descriptors. The higher the score, the most trustworthy the predictions.
+
+- The radius of the atom environment can be changed with the optional `--radius` command-line argument. Default is 5.
+
+- The decision threshold can be changed with the optional `--threshold` command-line argument. Default is 0.3.
 
 ```sh
 fame3r-test -i INPUT_FILE -m MODEL_FOLDER -o OUTPUT_FOLDER -r RADIUS[OPTIONAL, DEFAULT=5] -t THRESHOLD[OPTIONAL, DEFAULT=0.3] -fs[OPTIONAL]
@@ -100,9 +98,9 @@ Note:
 
 - If the `--compute_fame_scores` (-fs) flag is set, the script also computes FAME scores, which indicate how well each atom's environment is represented in the training data. These scores are calculated as the average Tanimoto similarity to the three nearest neighbors in the training set, based on FAME descriptors. The higher the score, the most trustworthy the predictions.
 
-- The radius of the atom environment is not part of the hyperparameter search, but can be set by changing the `--radius` command-line argument. Default is 5.
+- The radius of the atom environment can be changed with the optional `--radius` command-line argument. Default is 5.
 
-- The decision threshold can be changed by changing the `--threshold` command-line argument. Default is 0.3.
+- The decision threshold can be changed with the optional `--threshold` command-line argument. Default is 0.3.
 
 ```sh
 fame3r-infer -i INPUT_FILE -m MODEL_FOLDER -o OUTPUT_FOLDER -r RADIUS[OPTIONAL, DEFAULT=5] -t THRESHOLD[OPTIONAL, DEFAULT=0.3] -fs[OPTIONAL]
