@@ -40,6 +40,7 @@ def parse_arguments() -> argparse.Namespace:
         required=True,
         metavar="<input data file>",
         help="Input data file",
+        type=str,
     )
     parser.add_argument(
         "-o",
@@ -47,6 +48,7 @@ def parse_arguments() -> argparse.Namespace:
         required=True,
         metavar="<output folder>",
         help="Model output location",
+        type=str,
     )
     parser.add_argument(
         "-r",
@@ -98,6 +100,9 @@ def main():
 
     param_grid = {
         "n_estimators": [100, 250, 500, 750],
+        "max_depth": [None, 10, 20, 30],
+        "min_samples_split": [2, 5, 10],
+        "min_samples_leaf": [1, 2, 4],
         "max_features": ["sqrt", "log2"],
         "class_weight": ["balanced", "balanced_subsample"],
     }
@@ -202,7 +207,7 @@ def main():
 
     # Save optimal thresholds
     with open(best_params_file, "a", encoding="UTF-8") as file:
-        file.write(f"decision_threshold: {majority_threshold}\n")
+        file.write(f"decision_threshold: {round(majority_threshold, 1)}\n")
     print(f"Optimal threshold saved to {best_params_file}")
 
     # Save metrics

@@ -32,6 +32,7 @@ def parse_arguments() -> argparse.Namespace:
         required=True,
         metavar="<training data file>",
         help="Training data file",
+        type=str,
     )
     parser.add_argument(
         "-o",
@@ -39,6 +40,7 @@ def parse_arguments() -> argparse.Namespace:
         required=True,
         metavar="<Output folder>",
         help="Output location",
+        type=str,
     )
     parser.add_argument(
         "-r",
@@ -48,6 +50,60 @@ def parse_arguments() -> argparse.Namespace:
         default=5,
         help="Max. atom environment radius in number of bonds",
         type=int,
+    )
+    parser.add_argument(
+        "-n",
+        dest="n_estimators",
+        required=False,
+        metavar="<n_estimators>",
+        default=100,
+        help="Number of trees in the forest",
+        type=int,
+    )
+    parser.add_argument(
+        "-md",
+        dest="max_depth",
+        required=False,
+        metavar="<max_depth>",
+        default=None,
+        help="Maximum depth of the tree (int, None)",
+        type=lambda x: None if x == "None" else int(x),
+    )
+    parser.add_argument(
+        "-mss",
+        dest="min_samples_split",
+        required=False,
+        metavar="<min_samples_split>",
+        default=2,
+        help="Minimum number of samples required to split an internal node",
+        type=int,
+    )
+    parser.add_argument(
+        "-msl",
+        dest="min_samples_leaf",
+        required=False,
+        metavar="<min_samples_leaf>",
+        default=1,
+        help="Minimum number of samples required to be at a leaf node",
+        type=int,
+    )
+    parser.add_argument(
+        "-mf",
+        dest="max_features",
+        required=False,
+        metavar="<max_features>",
+        default="sqrt",
+        help="Number of features to consider when looking for the best split (sqrt, log2, None)",
+        type=lambda x: None if x == "None" else str(x),
+    )
+    parser.add_argument(
+        "-c",
+        dest="class_weight",
+        required=False,
+        metavar="<class_weight>",
+        default="balanced",
+        help="Class weight (balanced, balanced_subsample, None)",
+        type=lambda x: None if x == "None" else str(x),
     )
 
     return parser.parse_args()
@@ -81,9 +137,12 @@ def main():
 
     print("Training model...")
     clf = RandomForestClassifier(
-        n_estimators=100,
-        max_features="sqrt",
-        class_weight="balanced",
+        n_estimators=args.n_estimators,
+        max_depth=args.max_depth,
+        min_samples_split=args.min_samples_split,
+        min_samples_leaf=args.min_samples_leaf,
+        max_features=args.max_features,
+        class_weight=args.class_weight,
         random_state=42,
     )
     clf.fit(descriptors, som_labels)

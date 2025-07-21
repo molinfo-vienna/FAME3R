@@ -17,6 +17,7 @@ import os
 import sys
 from datetime import datetime
 from statistics import mean, stdev
+from tqdm import tqdm
 
 import numpy as np
 import pandas as pd
@@ -39,6 +40,7 @@ def parse_arguments() -> argparse.Namespace:
         required=True,
         metavar="<Input data file>",
         help="Input data file",
+        type=str,
     )
     parser.add_argument(
         "-m",
@@ -46,6 +48,7 @@ def parse_arguments() -> argparse.Namespace:
         required=True,
         metavar="<Model folder>",
         help="Model folder",
+        type=str,
     )
     parser.add_argument(
         "-o",
@@ -53,6 +56,7 @@ def parse_arguments() -> argparse.Namespace:
         required=True,
         metavar="<Output folder>",
         help="Output location",
+        type=str,
     )
     parser.add_argument(
         "-r",
@@ -140,15 +144,14 @@ def main():
         "Top-2 correctness rate": [],
     }
 
-    for i in range(NUM_BOOTSTRAPS):
-        print(f"Bootstrap {i + 1}...")
+    print("Computing metrics...")
+    for i in tqdm(range(NUM_BOOTSTRAPS), desc="Bootstrapping"):
         sampled_mol_num_ids = np.random.choice(
             list(set(mol_num_ids)), len(set(mol_num_ids)), replace=True
         )
         mask = np.zeros(len(mol_num_ids), dtype=bool)
         for mol_num_id in sampled_mol_num_ids:
             mask = mask | (mol_num_ids == mol_num_id)
-        print("Computing metrics...")
         assert som_labels is not None, "SOM labels are missing"
         (
             auroc,

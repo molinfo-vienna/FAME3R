@@ -54,7 +54,7 @@ fame3r-cv-hp-search -i INPUT_FILE -o OUTPUT_FOLDER -r RADIUS[OPTIONAL, DEFAULT=5
 
 Use the `train.py` to train a random forest classifier with pre-defined hyperparameters.
 
-The trained model is saved as a .joblib file in the specified output folder.
+The trained model is saved as a `model.joblib` file in the specified output folder.
 
 Note:
 
@@ -63,7 +63,7 @@ Note:
 - The atom environment radius can be changed with the optional `--radius` command-line argument (default: 5).
 
 ```sh
-fame3r-train -i INPUT_FILE -o OUTPUT_FOLDER -r RADIUS[OPTIONAL, DEFAULT=5]
+fame3r-train -i INPUT_FILE -o OUTPUT_FOLDER -r RADIUS[OPTIONAL, DEFAULT=5] -n N_ESIMATORS[OPTIONAL, DEFAULT=100] -md MAX_DEPTH[OPTIONAL, DEFAULT=None] -mss MIN_SAMPLES_SPLIT[OPTIONAL, DEFAULT=2] -msl MIN_SAMPLES_LEAF[OPTIONAL, DEFAULT=1] -mf MAX_FEATURES[OPTIONAL, DEFAULT=sqrt] -c CLASS_WEIGHT[OPTIONAL, DEFAULT=balanced]
 ```
 
 #### Testing a trained model on labeled test data

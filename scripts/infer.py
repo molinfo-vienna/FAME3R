@@ -32,6 +32,7 @@ def parse_arguments() -> argparse.Namespace:
         required=True,
         metavar="<Input data file>",
         help="Input data file",
+        type=str,
     )
     parser.add_argument(
         "-m",
@@ -39,6 +40,7 @@ def parse_arguments() -> argparse.Namespace:
         required=True,
         metavar="<Model folder>",
         help="Model folder",
+        type=str,
     )
     parser.add_argument(
         "-o",
@@ -46,6 +48,7 @@ def parse_arguments() -> argparse.Namespace:
         required=True,
         metavar="<Output folder>",
         help="Output location",
+        type=str,
     )
     parser.add_argument(
         "-r",
