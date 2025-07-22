@@ -1,66 +1,63 @@
 """Module for computing Fame Scores."""
 
-from statistics import mean
+import glob
+import os
 
 import numpy as np
-from CDPL import Descr, Math
+import pandas as pd
 
 
 class FAMEScores:
     """Class for computing Fame Scores."""
 
-    def __init__(self, train_descriptors, num_nearest_neighbors=3):
+    def __init__(self, model_folder, num_nearest_neighbors=3):
         """
         Initialize the FameScores class.
 
         Args:
-            data (np.ndarray): 2D array of descriptors (rows: samples, columns: descriptors).
+            model_folder (str): Path to the model folder where the reference descriptors are stored.
             num_nearest_neighbors (int): Number of nearest neighbors to consider.
         """
-        self.train_descriptors = train_descriptors
+        csv_files = glob.glob(os.path.join(model_folder, "*descriptors.csv"))
+        if len(csv_files) == 1:
+            reference_descriptors_df = pd.read_csv(csv_files[0])
+        else:
+            raise FileNotFoundError(
+                f"Expected one CSV file ending with 'descriptors.csv', but found {len(csv_files)}."
+            )
+        # Drop all columns from the reference descriptors dataframe that don't contain "AtomType"
+        # This removes the molecule and atom identifiers, true labels, and physicochemical and topological
+        # descriptors, leaving only the circular fingerprints.
+        atomtype_columns = [col for col in reference_descriptors_df.columns if "AtomType" in col]
+        ref_fps = reference_descriptors_df[atomtype_columns].values
+
+        self.ref_fps = ref_fps
         self.num_nearest_neighbors = num_nearest_neighbors
 
-        # Initialize bulk similarity calculator for
-        # calculating the similarity between
-        # double precision floating point descriptor vectors.
-        # Default similarity measure is Tanimoto.
-        self.sim_calc = Descr.DVectorBulkSimilarityCalculator()
-
-        # Add descriptors to the similarity calculator
-        for i in range(self.train_descriptors.shape[0]):
-            descriptor = Math.DVector(self.train_descriptors[i, :])
-
-            # Check if the descriptor is already in the calculator
-            # to avoid duplicates.
-            if descriptor in self.sim_calc:
-                continue
-
-            self.sim_calc.addDescriptor(descriptor)
-
-    def compute_fame_scores(self, data):
+    def compute_fame_scores(self, fps):
         """
-        Compute the fame scores based on the provided data.
+        Compute the fame scores based on the provided fingerprints.
+        The fame score is the mean of the top 3 nearest neighbor similarities to the reference set.
 
         Args:
-            data (np.ndarray): 2D array of descriptors (rows: samples, columns: descriptors).
+            fps (np.ndarray): 2D array of circular fingerprints (rows: sample index, columns: circular fingerprint index).
 
         Returns:
             np.ndarray: 1D array of fame scores.
         """
-        fame_scores = []
 
-        # Iterate over each descriptor in the data
-        for i in range(data.shape[0]):
-            query = Math.DVector(data[i, :])
+        ab = np.matmul(self.ref_fps, fps.T)
+        a = np.sum(self.ref_fps * self.ref_fps, axis=1)
+        b = np.sum(fps * fps, axis=1)
+        div = a[:,None] + b[None,:] - ab
 
-            # Calculate similarities and order results
-            # (enabled by sec. arg. == True) by descending value
-            self.sim_calc.calculate(query, True)
-            temp_fame_scores = []
-            for k in range(self.num_nearest_neighbors):
-                similarity_score = self.sim_calc.getSimilarity(k)
-                temp_fame_scores.append(similarity_score)
-            fame_scores.append(round(mean(temp_fame_scores), 2))
+        pairwise_tanimoto_similarities = np.divide(
+            ab, 
+            div, 
+            out=np.zeros_like(ab), 
+            where=div != 0
+        )
 
-        # Return the fame scores as a numpy array
-        return np.array(fame_scores, dtype=float)
+        fame_scores = np.mean(np.sort(pairwise_tanimoto_similarities, axis=0)[-3:], axis=0)
+
+        return fame_scores

@@ -12,7 +12,6 @@ The script also computes FAME scores if the -fs flag is set.
 
 import argparse
 import csv
-import glob
 import os
 import sys
 from datetime import datetime
@@ -113,25 +112,16 @@ def main():
     model_file = os.path.join(args.model_folder, "model.joblib")
     clf = load(model_file)
 
-    print("Testing model...")
+    print("Predicting SOMs...")
     y_prob = clf.predict_proba(descriptors)[:, 1]
     y_pred = (y_prob > args.threshold).astype(int)
 
     fame_scores = None
     if args.compute_fame_scores:
         print("Computing FAME scores...")
-        csv_files = glob.glob(os.path.join(args.model_folder, "*descriptors.csv"))
-        if len(csv_files) == 1:
-            train_descriptors_df = pd.read_csv(csv_files[0])
-        else:
-            raise FileNotFoundError(
-                f"Expected one CSV file ending with 'descriptors.csv', but found {len(csv_files)}."
-            )
-        train_descriptors = train_descriptors_df.drop(
-            columns=["mol_num_id", "mol_id", "atom_id", "som_label"]
-        ).values
-        fame_scores_generator = FAMEScores(train_descriptors)
-        fame_scores = fame_scores_generator.compute_fame_scores(descriptors)
+        fame_scores_generator = FAMEScores(args.model_folder, num_nearest_neighbors=3)
+        # Compute the FAME scores for the test set, excluding the physicochemical and topological descriptors
+        fame_scores = fame_scores_generator.compute_fame_scores(descriptors[:,:-14])
 
     print("Computing metrics...")
     metrics: dict[str, list[float]] = {
@@ -144,7 +134,6 @@ def main():
         "Top-2 correctness rate": [],
     }
 
-    print("Computing metrics...")
     for i in tqdm(range(NUM_BOOTSTRAPS), desc="Bootstrapping"):
         sampled_mol_num_ids = np.random.choice(
             list(set(mol_num_ids)), len(set(mol_num_ids)), replace=True
@@ -199,7 +188,7 @@ def main():
                 som_labels[i],
             ]
             if args.compute_fame_scores:
-                row.append(fame_scores[i])
+                row.append(round(fame_scores[i], 2))
             writer.writerow(row)
 
     print(f"Predictions saved to {predictions_file}")

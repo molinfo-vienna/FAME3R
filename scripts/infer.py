@@ -109,18 +109,9 @@ def main():
     fame_scores = None
     if args.compute_fame_scores:
         print("Computing FAME scores...")
-        csv_files = glob.glob(os.path.join(args.model_folder, "*descriptors.csv"))
-        if len(csv_files) == 1:
-            train_descriptors_df = pd.read_csv(csv_files[0])
-        else:
-            raise FileNotFoundError(
-                f"Expected one CSV file ending with 'descriptors.csv', but found {len(csv_files)}."
-            )
-        train_descriptors = train_descriptors_df.drop(
-            columns=["mol_num_id", "mol_id", "atom_id", "som_label"]
-        ).values
-        fame_scores_generator = FAMEScores(train_descriptors)
-        fame_scores = fame_scores_generator.compute_fame_scores(descriptors)
+        fame_scores_generator = FAMEScores(args.model_folder, num_nearest_neighbors=3)
+        # Compute the FAME scores for the test set, excluding the physicochemical and topological descriptors
+        fame_scores = fame_scores_generator.compute_fame_scores(descriptors[:,:-14])
 
     predictions_file = os.path.join(args.out_folder, "predictions.csv")
     with open(predictions_file, "w", encoding="UTF-8", newline="") as file:
@@ -133,7 +124,7 @@ def main():
         for i in range(len(mol_ids)):
             row = [mol_ids[i], atom_ids[i], predictions[i], predictions_binary[i]]
             if args.compute_fame_scores:
-                row.append(fame_scores[i])
+                row.append(round(fame_scores[i], 2))
             writer.writerow(row)
 
     print(f"Predictions saved to {predictions_file}")

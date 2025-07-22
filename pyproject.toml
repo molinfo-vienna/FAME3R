@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fame3r"
-version = "1.0.4"
+version = "2.0.0"
 description = "FAME3R: a re-implementation of the FAME3 model"
 readme = "README.md"
 requires-python = ">=3.10"
