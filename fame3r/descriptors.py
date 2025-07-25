@@ -7,7 +7,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils._set_output import _SetOutputMixin
 from sklearn.utils.validation import check_array, check_is_fitted
 
-from fame3r._internal import DescriptorGenerator, MoleculeProcessor
+from fame3r._internal import DescriptorGenerator
 
 __all__ = ["FAME3RVectorizer"]
 
@@ -18,7 +18,6 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
 
     def fit(self, X: Any = None, y: None = None):
         example_mol = parseSMILES("C")
-        MoleculeProcessor.perceive_mol(example_mol)
 
         self.inner_ = DescriptorGenerator(radius=self.radius)
         self.feature_names_ = self.inner_.generate_descriptors(
@@ -46,7 +45,6 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
             return self._empty_value()
 
         cdpkit_marked_educt = parseSMILES(X)
-        MoleculeProcessor.perceive_mol(cdpkit_marked_educt)
 
         som_atoms_unordered = {
             atom.getProperty(AtomProperty.ATOM_MAPPING_ID): atom
