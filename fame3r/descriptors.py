@@ -7,7 +7,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils._set_output import _SetOutputMixin
 from sklearn.utils.validation import check_array, check_is_fitted
 
-from fame3r.compute_descriptors import DescriptorGenerator, MoleculeProcessor
+from fame3r._internal import DescriptorGenerator, MoleculeProcessor
 
 __all__ = ["FAME3RVectorizer"]
 
