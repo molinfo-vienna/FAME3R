@@ -10,7 +10,8 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [
-  {name = "Roxane Jacob", email = "roxane.axel.jacob@univie.ac.at"},
+    {name = "Roxane Jacob", email = "roxane.axel.jacob@univie.ac.at"},
+    {name = "Leo Gaskin", email = "leo.gaskin@univie.ac.at"},
 ]
 
 dependencies = [
