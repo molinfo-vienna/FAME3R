@@ -41,64 +41,27 @@ class DescriptorGenerator:
         """Initialize the DescriptorGenerator class."""
         self.radius = radius
 
-    def generate_descriptors(
-        self, ctr_atom: Chem.Atom, molgraph: Chem.MolecularGraph
-    ) -> tuple[list[str], np.ndarray]:
-        """Generate descriptors for a given atom in a molecule.
-
-        Args:
-            ctr_atom (Chem.Atom): center atom
-            molgraph (Chem.MolecularGraph): molecular graph
-
-        Returns:
-            tuple: (descriptor_names, descriptors)
-        """
+    def generate_fp(self, ctr_atom: Chem.Atom, molgraph: Chem.MolecularGraph):
         _prepare_mol(molgraph)
-
-        properties_dict = {
-            Chem.getSybylType: "AtomType",
-            MolProp.getHeavyAtomCount: "AtomDegree",
-            MolProp.getHybridPolarizability: "HybridPolarizability",
-            MolProp.getVSEPRCoordinationGeometry: "VSEPRgeometry",
-            MolProp.calcExplicitValence: "AtomValence",
-            MolProp.calcEffectivePolarizability: "EffectivePolarizability",
-            MolProp.getPEOESigmaCharge: "SigmaCharge",
-            ForceField.getMMFF94Charge: "MMFF94Charge",
-            MolProp.calcPiElectronegativity: "PiElectronegativity",
-            MolProp.getPEOESigmaElectronegativity: "SigmaElectronegativity",
-            MolProp.calcInductiveEffect: "InductiveEffect",
-        }
-
-        fs, names = zip(*properties_dict.items())
 
         # Create descriptor names
         descriptor_names = []
-        for prefix in names:
-            if prefix == "AtomType":
-                # Circular fingerprints for all radii (0 to radius)
-                for j in range(self.radius + 1):
-                    for i in SYBYL_ATOM_TYPE_IDX_CDPKIT:
-                        for k in range(32):
-                            descriptor_names.append(
-                                f"R{j}_{prefix}_{Chem.getSybylAtomTypeString(i)}_B{k}"
-                            )
-            else:
-                # Physicochemical property descriptors only for center atom (radius 0)
-                descriptor_names.append(f"{prefix}")
+        for radius in range(self.radius + 1):
+            for atom_type in SYBYL_ATOM_TYPE_IDX_CDPKIT:
+                for bit in range(32):
+                    descriptor_names.append(
+                        f"R{radius}_AtomType_{Chem.getSybylAtomTypeString(atom_type)}_B{bit}"
+                    )
 
         # Calculate total descriptor size
-        fingerprints_size = len(SYBYL_ATOM_TYPE_IDX_CDPKIT) * (self.radius + 1) * 32
-        physchem_descriptor_size = len(properties_dict) - 1
-        total_descriptor_size = fingerprints_size + physchem_descriptor_size
-
-        descr = np.zeros(total_descriptor_size, dtype=float)
+        fingerprints_size = len(descriptor_names)
 
         # Get the chemical environment around the center atom
         env = Chem.Fragment()
         Chem.getEnvironment(ctr_atom, molgraph, self.radius, env)
 
         # Initialize circular fingerprints
-        fingerprints = np.zeros(fingerprints_size, dtype=float)
+        fingerprints = np.zeros(fingerprints_size, dtype=bool)
 
         # Count atoms of each type at each distance
         atom_counts = np.zeros(
@@ -125,57 +88,58 @@ class DescriptorGenerator:
                         fingerprints[fingerprint_index] = 1
                     fingerprint_index += 1
 
-        # Copy circular fingerprints to the main descriptor array
-        descr[:fingerprints_size] = fingerprints
+        return descriptor_names, fingerprints
 
-        # Initialize physicochemical property descriptors (only for center atom)
-        physchem_descr = np.zeros(physchem_descriptor_size, dtype=float)
+    def generate_pchem(self, ctr_atom: Chem.Atom, molgraph: Chem.MolecularGraph):
+        _prepare_mol(molgraph)
 
-        # Calculate physicochemical properties for the center atom
-        for i, (f_, name) in enumerate(zip(fs[1:], names[1:])):  # Skip AtomType
-            prop = (
-                f_(ctr_atom)
-                if name in ["SigmaCharge", "MMFF94Charge", "SigmaElectronegativity"]
-                else f_(ctr_atom, molgraph)
-            )
-            physchem_descr[i] = prop
+        descriptors = {
+            "AtomDegree": MolProp.getHeavyAtomCount(ctr_atom),
+            "HybridPolarizability": MolProp.getHybridPolarizability(ctr_atom, molgraph),
+            "VSEPRgeometry": MolProp.getVSEPRCoordinationGeometry(ctr_atom, molgraph),
+            "AtomValence": MolProp.calcExplicitValence(ctr_atom, molgraph),
+            "EffectivePolarizability": MolProp.calcEffectivePolarizability(
+                ctr_atom, molgraph
+            ),
+            "SigmaCharge": MolProp.getPEOESigmaCharge(ctr_atom),
+            "MMFF94Charge": ForceField.getMMFF94Charge(ctr_atom),
+            "PiElectronegativity": MolProp.calcPiElectronegativity(ctr_atom, molgraph),
+            "SigmaElectronegativity": MolProp.getPEOESigmaElectronegativity(
+                ctr_atom,
+            ),
+            "InductiveEffect": MolProp.calcInductiveEffect(ctr_atom, molgraph),
+        }
 
-        # Copy physicochemical property descriptors to the main descriptor array
-        descr[fingerprints_size:] = physchem_descr.flatten()
+        return list(descriptors.keys()), np.array(list(descriptors.values())).round(4)
 
-        # Add topological descriptors
-        max_top_dist = _max_topological_distance(molgraph)
-        max_distance_center = _max_distance_from_reference(molgraph, ctr_atom)
-        descriptor_names += [
-            "longestMaxTopDistinMolecule",
-            "highestMaxTopDistinMatrixRow",
-            "diffSPAN",
-            "refSPAN",
-        ]
+    def generate_topo(self, ctr_atom: Chem.Atom, molgraph: Chem.MolecularGraph):
+        _prepare_mol(molgraph)
 
-        if max_top_dist == 0:
-            descr = np.append(
-                descr,
-                [
-                    max_top_dist,
-                    max_distance_center,
-                    max_top_dist - max_distance_center,
-                    0,
-                ],
-            )
-        else:
-            descr = np.append(
-                descr,
-                [
-                    max_top_dist,
-                    max_distance_center,
-                    max_top_dist - max_distance_center,
-                    max_distance_center / max_top_dist,
-                ],
-            )
+        max_topo_dist = _max_topological_distance(molgraph)
+        max_dist_center = _max_distance_from_reference(molgraph, ctr_atom)
 
-        descr = descr.round(4)
-        return descriptor_names, descr
+        descriptors = {
+            "longestMaxTopDistinMolecule": max_topo_dist,
+            "highestMaxTopDistinMatrixRow": max_dist_center,
+            "diffSPAN": max_topo_dist - max_dist_center,
+            "refSPAN": max_dist_center / max_topo_dist if max_topo_dist != 0 else 0,
+        }
+
+        return list(descriptors.keys()), np.array(list(descriptors.values())).round(4)
+
+    def generate_descriptors(
+        self, ctr_atom: Chem.Atom, molgraph: Chem.MolecularGraph
+    ) -> tuple[list[str], np.ndarray]:
+        full_descriptor_names = []
+        full_descriptors = np.array([], dtype=float)
+
+        for f in [self.generate_fp, self.generate_pchem, self.generate_topo]:
+            descriptor_names, descriptors = f(ctr_atom, molgraph)
+
+            full_descriptor_names += descriptor_names
+            full_descriptors = np.concatenate((full_descriptors, descriptors))
+
+        return full_descriptor_names, full_descriptors
 
 
 def _prepare_mol(mol: Chem.Molecule) -> None:
