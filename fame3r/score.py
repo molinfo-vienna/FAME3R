@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.base import BaseEstimator
 from sklearn.neighbors import BallTree
 from sklearn.utils._set_output import _SetOutputMixin
-from sklearn.utils.validation import check_array, check_is_fitted
+from sklearn.utils.validation import check_is_fitted, validate_data
 
 __all__ = ["FAME3RScoreEstimator"]
 
@@ -12,7 +12,8 @@ class FAME3RScoreEstimator(BaseEstimator, _SetOutputMixin):
         self.n_neighbors: int = n_neighbors
 
     def fit(self, X, y=None):
-        X = check_array(
+        X = validate_data(
+            self,
             X,
             dtype="numeric",
             ensure_2d=True,
@@ -28,8 +29,10 @@ class FAME3RScoreEstimator(BaseEstimator, _SetOutputMixin):
 
     def predict(self, X):
         check_is_fitted(self)
-        X = check_array(
+        X = validate_data(
+            self,
             X,
+            reset=False,
             dtype="numeric",
             ensure_2d=True,
             ensure_min_samples=0,
