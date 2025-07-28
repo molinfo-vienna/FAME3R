@@ -49,14 +49,14 @@ fame3r-train = "scripts.train:main"
 
 [tool.hatch.build.targets.sdist]
 include = [
-  "fame3r",
-  "scripts",
+    "fame3r",
+    "scripts",
 ]
 
 [tool.hatch.build.targets.wheel]
 include = [
-  "fame3r",
-  "scripts",
+    "fame3r",
+    "scripts",
 ]
 
 [tool.pytest.ini_options]
