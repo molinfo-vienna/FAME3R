@@ -58,18 +58,13 @@ include = [
   "scripts",
 ]
 
-[tool.pylint.messages_control]
-disable = [
-    "no-member", # needed because CDPKit does not include module stub files
-    "too-few-public-methods",
-    "duplicate-code",
-    "too-many-locals",
-    "too-many-statements",
-    "consider-using-enumerate",
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
 ]
 
-[tool.isort]
-profile = "black"
+[tool.pyright]
+typeCheckingMode = "basic"
 
-[tool.mypy]
-ignore_missing_imports = true
+[tool.ruff.lint]
+extend-select = ["I"]
