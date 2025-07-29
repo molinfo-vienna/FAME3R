@@ -14,6 +14,7 @@ from fame3r._internal import (
     generate_fingerprints,
     generate_physicochemical_descriptors,
     generate_topological_descriptors,
+    prepare_mol,
 )
 
 __all__ = ["FAME3RVectorizer"]
@@ -79,6 +80,8 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
             raise ValueError(f"only one SOM atom per sample is supported: {X}")
 
         descriptors = []
+
+        prepare_mol(som_atoms[0].molecule)
 
         for subset in self.output:
             if subset == "fingerprint":

@@ -51,8 +51,6 @@ def generate_fingerprints(
     molgraph: Chem.MolecularGraph,
     radius: int,
 ) -> npt.NDArray[np.bool]:
-    _prepare_mol(molgraph)
-
     # Calculate total descriptor size
     fingerprints_size = (radius + 1) * len(SYBYL_ATOM_TYPE_IDX_CDPKIT) * 32
 
@@ -107,8 +105,6 @@ def generate_physicochemical_descriptors(
     ctr_atom: Chem.Atom,
     molgraph: Chem.MolecularGraph,
 ) -> npt.NDArray[np.float64]:
-    _prepare_mol(molgraph)
-
     return np.array(
         [
             MolProp.getHeavyAtomCount(ctr_atom),
@@ -138,8 +134,6 @@ def generate_topological_descriptors(
     ctr_atom: Chem.Atom,
     molgraph: Chem.MolecularGraph,
 ) -> npt.NDArray[np.float64]:
-    _prepare_mol(molgraph)
-
     max_topo_dist = _max_topological_distance(molgraph)
     max_dist_center = _max_distance_from_reference(molgraph, ctr_atom)
 
@@ -154,7 +148,7 @@ def generate_topological_descriptors(
     )
 
 
-def _prepare_mol(mol: Chem.Molecule) -> None:
+def prepare_mol(mol: Chem.Molecule) -> None:
     Chem.calcImplicitHydrogenCounts(mol, False)
     Chem.perceiveHybridizationStates(mol, False)
     Chem.perceiveSSSR(mol, False)
