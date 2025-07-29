@@ -160,6 +160,8 @@ def _prepare_mol(mol: Chem.Molecule) -> None:
     ForceField.assignMMFF94BondTypeIndices(mol, False, False)
     ForceField.calcMMFF94AtomCharges(mol, False, False)
 
+    Chem.perceiveComponents(mol, False)
+
 
 def _max_topological_distance(molgraph: Chem.MolecularGraph) -> float:
     return max(
