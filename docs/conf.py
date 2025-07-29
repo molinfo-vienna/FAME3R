@@ -27,7 +27,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
-    "sphinx.ext.napoleon",
+    "numpydoc",
     "sphinx_copybutton",
 ]
 
@@ -48,7 +48,7 @@ html_theme_options = {
     "use_repository_button": True,
     "use_issues_button": True,
     "launch_buttons": {"colab_url": "https://colab.research.google.com"},
-    "show_toc_level": 2,
+    "show_toc_level": 3,
 }
 
 html_static_path = ["_static"]
@@ -67,8 +67,7 @@ python_use_unqualified_type_names = True
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
-    "rdkit": ("https://www.rdkit.org/docs/", None),
-    "pandas": ("https://pandas.pydata.org/docs/", None),
+    "sklearn": ("https://scikit-learn.org/stable/", None),
 }
 
 

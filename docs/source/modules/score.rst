@@ -6,3 +6,5 @@ FAME Score
 
 .. automodule:: fame3r.score
    :members:
+   :show-inheritance:
+   :inherited-members:

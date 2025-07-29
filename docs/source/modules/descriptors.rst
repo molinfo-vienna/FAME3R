@@ -6,3 +6,5 @@ Molecular descriptors
 
 .. automodule:: fame3r.descriptors
    :members:
+   :show-inheritance:
+   :inherited-members:

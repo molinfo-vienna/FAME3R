@@ -31,6 +31,7 @@ docs = [
     "sphinx>=8.2.3",
     "sphinx-book-theme>=1.1.4",
     "sphinx-copybutton>=0.5.2",
+    "numpydoc>=1.9.0",
 ]
 dev = [
     "basedpyright>=1.29.4",

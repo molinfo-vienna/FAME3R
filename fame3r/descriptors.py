@@ -21,6 +21,33 @@ __all__ = ["FAME3RVectorizer"]
 
 
 class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
+    """Transforms annotated SOMs (sites of metabolism) into FAME3-like features.
+
+
+    Parameters
+    ----------
+    radius : int, default=5
+
+        Radius used for circular fingerprint generation.
+
+    input : {"smiles", "cdpkit"}, default="smiles"
+
+        Format of the provided SOMs. Can be either "smiles" to accept a SMILES
+        codes with a single atom mapping number each specifying the SOM, or
+        "cdpkit" to accept CDPKit Atom objects.
+
+    output : list of {"fingerprint", "physicochemical", "topological"}
+
+        Which molecular descriptors to generate, and in which order. Defaults to
+        generating all supported descriptors.
+
+    Examples
+    --------
+    >>> from fame3r.descriptors import FAME3RVectorizer
+    >>> FAME3RVectorizer().fit_transform([["CC[C:1]"]])
+    array([[1., 0., 0., ..., 2., 0., 1.]], shape=(1, 5006))
+    """
+
     def __init__(
         self,
         *,
@@ -37,6 +64,21 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
         self.output = output
 
     def fit(self, X=None, y=None):
+        """Set up the vectorizer for usage.
+
+        Parameters
+        ----------
+        X : (ignored)
+            Ignored parameter
+
+        y : (ignored)
+            Ignored parameter
+
+        Returns
+        -------
+        self : object
+            FAME3RVectorizer class instance.
+        """
         self.n_features_in_ = 1
         self.feature_names_ = []
 
@@ -51,6 +93,26 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
         return self
 
     def transform(self, X):
+        """Transform SOMs (sites of metabolism) to feature matrix.
+
+        Samples are provided as a 2d array with shape (n_samples, 1).
+
+        The single provided feature should either be a SMILES string or a CPDKit
+        Atom, depending on the value of ``input`` given to the constructor.
+
+        Parameters
+        ----------
+        X : array-like of shape (n_samples, 1)
+            Input samples.
+
+
+        Returns
+        -------
+        X_new : ndarray array of shape (n_samples, n_features_new)
+            Transformed array.
+
+        """
+
         check_is_fitted(self)
         X = validate_data(
             self,
@@ -65,6 +127,25 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
         return np.apply_along_axis(lambda row: self.transform_one(row), 1, X)
 
     def transform_one(self, X) -> npt.NDArray[np.float64]:
+        """Transform a single SOM (site of metabolism) to feature vector.
+
+        The sample is provided as an 1d array with shape (1,).
+
+        The single provided feature should either be a SMILES string or a CPDKit
+        Atom, depending on the value of ``input`` given to the constructor.
+
+        Parameters
+        ----------
+        X : array-like of shape (1,)
+            Input sample.
+
+
+        Returns
+        -------
+        X_new : ndarray array of shape (n_features_new,)
+            Feature vector.
+        """
+
         check_is_fitted(self)
 
         if len(X) != 1:
@@ -113,6 +194,19 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
         return np.concat(descriptors, dtype=float)
 
     def get_feature_names_out(self, input_features=None):
+        """Get output feature names for transformation.
+
+        Parameters
+        ----------
+        input_features : array-like of str or None, default=None
+            Not used, present here for API consistency by convention.
+
+        Returns
+        -------
+        feature_names_out : ndarray of str objects
+            Transformed feature names.
+        """
+
         check_is_fitted(self)
 
         return self.feature_names_
