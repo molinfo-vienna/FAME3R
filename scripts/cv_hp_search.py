@@ -89,25 +89,7 @@ def parse_arguments() -> argparse.Namespace:
     return parse_args
 
 
-def compute_metrics(
-    y_true: np.ndarray,
-    y_prob: np.ndarray,
-    y_pred: np.ndarray,
-    mol_num_id: np.ndarray,
-):
-    """
-    Compute various performance metrics for binary classification.
-
-    Args:
-        y_true (np.ndarray): Ground truth binary labels.
-        y_prob (np.ndarray): Predicted probabilities for the positive class.
-        y_pred (np.ndarray): Predicted binary labels.
-        mol_num_id (np.ndarray): Array of numerical molecule IDs corresponding to each data point.
-
-    Returns:
-        tuple[float, float, float, float, float, float, float]:
-            A tuple containing AUROC, AP, F1, MCC, precision, recall, and top-2 success rate.
-    """
+def compute_metrics(y_true, y_prob, y_pred, mol_num_id):
     # Basic metrics
     auroc = roc_auc_score(y_true, y_prob)
     ap = average_precision_score(y_true, y_prob)
