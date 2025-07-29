@@ -60,19 +60,24 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
             estimator=FAME3RVectorizer,
         )
 
-        return np.apply_along_axis(lambda row: self.transform_one(row[0]), 1, X)
+        return np.apply_along_axis(lambda row: self.transform_one(row), 1, X)
 
     def transform_one(self, X) -> npt.NDArray[np.float64]:
         check_is_fitted(self)
 
+        if len(X) != 1:
+            ValueError(
+                f"Found array with {len(X)} feature(s) while 1 feature is required."
+            )
+
         if self.input == "smiles":
-            if not isinstance(X, str):
+            if not isinstance(X[0], str):
                 raise ValueError("must pass SOM encoded as a SMILES string")
-            som_atoms = _extract_marked_atoms(X)
+            som_atoms = _extract_marked_atoms(X[0])
         elif self.input == "cdpkit":
-            if not isinstance(X, Atom):
+            if not isinstance(X[0], Atom):
                 raise ValueError("must pass SOM encoded as a CDPKit atom")
-            som_atoms = [X]
+            som_atoms = [X[0]]
         else:
             raise ValueError(f"unsupported input type: {self.input}")
 
