@@ -50,6 +50,7 @@ html_theme_options = {
     "use_issues_button": True,
     "launch_buttons": {"colab_url": "https://colab.research.google.com"},
     "show_toc_level": 2,
+    "show_navbar_depth": 2,
 }
 
 html_static_path = ["_static"]

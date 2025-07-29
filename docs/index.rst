@@ -23,7 +23,7 @@
    :hidden:
    :glob:
 
-   source/modules/fame3r.*
+   source/modules/fame3r
 
 Indices and search
 ------------------
