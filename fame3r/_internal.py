@@ -1,7 +1,7 @@
 # pyright: reportAttributeAccessIssue=false
 
-
 import numpy as np
+import numpy.typing as npt
 from CDPL import Chem, ForceField, MolProp
 
 SYBYL_ATOM_TYPE_IDX_CDPKIT = [
@@ -34,112 +34,124 @@ SYBYL_ATOM_TYPE_IDX_CDPKIT = [
 ]
 
 
-class DescriptorGenerator:
-    """Class for generating descriptors for a given atom in a molecule."""
+def generate_fingerprint_names(radius: int) -> list[str]:
+    descriptor_names = []
+    for radius in range(radius + 1):
+        for atom_type in SYBYL_ATOM_TYPE_IDX_CDPKIT:
+            for bit in range(32):
+                descriptor_names.append(
+                    f"R{radius}_AtomType_{Chem.getSybylAtomTypeString(atom_type)}_B{bit}"
+                )
 
-    def __init__(self, radius):
-        """Initialize the DescriptorGenerator class."""
-        self.radius = radius
+    return descriptor_names
 
-    def generate_fp(self, ctr_atom: Chem.Atom, molgraph: Chem.MolecularGraph):
-        _prepare_mol(molgraph)
 
-        # Create descriptor names
-        descriptor_names = []
-        for radius in range(self.radius + 1):
-            for atom_type in SYBYL_ATOM_TYPE_IDX_CDPKIT:
-                for bit in range(32):
-                    descriptor_names.append(
-                        f"R{radius}_AtomType_{Chem.getSybylAtomTypeString(atom_type)}_B{bit}"
-                    )
+def generate_fingerprints(
+    ctr_atom: Chem.Atom,
+    molgraph: Chem.MolecularGraph,
+    radius: int,
+) -> npt.NDArray[np.bool]:
+    _prepare_mol(molgraph)
 
-        # Calculate total descriptor size
-        fingerprints_size = len(descriptor_names)
+    # Calculate total descriptor size
+    fingerprints_size = (radius + 1) * len(SYBYL_ATOM_TYPE_IDX_CDPKIT) * 32
 
-        # Get the chemical environment around the center atom
-        env = Chem.Fragment()
-        Chem.getEnvironment(ctr_atom, molgraph, self.radius, env)
+    # Get the chemical environment around the center atom
+    env = Chem.Fragment()
+    Chem.getEnvironment(ctr_atom, molgraph, radius, env)
 
-        # Initialize circular fingerprints
-        fingerprints = np.zeros(fingerprints_size, dtype=bool)
+    # Initialize circular fingerprints
+    fingerprints = np.zeros(fingerprints_size, dtype=bool)
 
-        # Count atoms of each type at each distance
-        atom_counts = np.zeros(
-            (len(SYBYL_ATOM_TYPE_IDX_CDPKIT), self.radius + 1), dtype=int
-        )
+    # Count atoms of each type at each distance
+    atom_counts = np.zeros((len(SYBYL_ATOM_TYPE_IDX_CDPKIT), radius + 1), dtype=int)
 
-        for atom in env.atoms:
-            sybyl_type = Chem.getSybylType(atom)
-            if sybyl_type not in SYBYL_ATOM_TYPE_IDX_CDPKIT:
-                continue
+    for atom in env.atoms:
+        sybyl_type = Chem.getSybylType(atom)
+        if sybyl_type not in SYBYL_ATOM_TYPE_IDX_CDPKIT:
+            continue
 
-            sybyl_type_index = SYBYL_ATOM_TYPE_IDX_CDPKIT.index(sybyl_type)
-            radius = Chem.getTopologicalDistance(ctr_atom, atom, molgraph)
-            atom_counts[sybyl_type_index, radius] += 1
+        sybyl_type_index = SYBYL_ATOM_TYPE_IDX_CDPKIT.index(sybyl_type)
+        radius = Chem.getTopologicalDistance(ctr_atom, atom, molgraph)
+        atom_counts[sybyl_type_index, radius] += 1
 
-        # Generate 32-bit fingerprints for each combination of atom type and distance
-        fingerprint_index = 0
-        for radius in range(self.radius + 1):  # Radius (R0, R1, ..., R5)
-            for sybyl_type_index in range(len(SYBYL_ATOM_TYPE_IDX_CDPKIT)):  # Atom type
-                for bit in range(32):  # Bit position (B0, B1, ..., B31)
-                    count = atom_counts[sybyl_type_index, radius]
-                    # Set bit to 1 if count > bit position
-                    if count > bit:
-                        fingerprints[fingerprint_index] = 1
-                    fingerprint_index += 1
+    # Generate 32-bit fingerprints for each combination of atom type and distance
+    fingerprint_index = 0
+    for radius in range(radius + 1):  # Radius (R0, R1, ..., R5)
+        for sybyl_type_index in range(len(SYBYL_ATOM_TYPE_IDX_CDPKIT)):  # Atom type
+            for bit in range(32):  # Bit position (B0, B1, ..., B31)
+                count = atom_counts[sybyl_type_index, radius]
+                # Set bit to 1 if count > bit position
+                if count > bit:
+                    fingerprints[fingerprint_index] = 1
+                fingerprint_index += 1
 
-        return descriptor_names, fingerprints
+    return fingerprints
 
-    def generate_pchem(self, ctr_atom: Chem.Atom, molgraph: Chem.MolecularGraph):
-        _prepare_mol(molgraph)
 
-        descriptors = {
-            "AtomDegree": MolProp.getHeavyAtomCount(ctr_atom),
-            "HybridPolarizability": MolProp.getHybridPolarizability(ctr_atom, molgraph),
-            "VSEPRgeometry": MolProp.getVSEPRCoordinationGeometry(ctr_atom, molgraph),
-            "AtomValence": MolProp.calcExplicitValence(ctr_atom, molgraph),
-            "EffectivePolarizability": MolProp.calcEffectivePolarizability(
-                ctr_atom, molgraph
-            ),
-            "SigmaCharge": MolProp.getPEOESigmaCharge(ctr_atom),
-            "MMFF94Charge": ForceField.getMMFF94Charge(ctr_atom),
-            "PiElectronegativity": MolProp.calcPiElectronegativity(ctr_atom, molgraph),
-            "SigmaElectronegativity": MolProp.getPEOESigmaElectronegativity(
-                ctr_atom,
-            ),
-            "InductiveEffect": MolProp.calcInductiveEffect(ctr_atom, molgraph),
-        }
+PHYSICOCHEMICAL_DESCRIPTOR_NAMES = [
+    "AtomDegree",
+    "HybridPolarizability",
+    "VSEPRgeometry",
+    "AtomValence",
+    "EffectivePolarizability",
+    "SigmaCharge",
+    "MMFF94Charge",
+    "PiElectronegativity",
+    "SigmaElectronegativity",
+    "InductiveEffect",
+]
 
-        return list(descriptors.keys()), np.array(list(descriptors.values())).round(4)
 
-    def generate_topo(self, ctr_atom: Chem.Atom, molgraph: Chem.MolecularGraph):
-        _prepare_mol(molgraph)
+def generate_physicochemical_descriptors(
+    ctr_atom: Chem.Atom,
+    molgraph: Chem.MolecularGraph,
+) -> npt.NDArray[np.float64]:
+    _prepare_mol(molgraph)
 
-        max_topo_dist = _max_topological_distance(molgraph)
-        max_dist_center = _max_distance_from_reference(molgraph, ctr_atom)
+    return np.array(
+        [
+            MolProp.getHeavyAtomCount(ctr_atom),
+            MolProp.getHybridPolarizability(ctr_atom, molgraph),
+            MolProp.getVSEPRCoordinationGeometry(ctr_atom, molgraph),
+            MolProp.calcExplicitValence(ctr_atom, molgraph),
+            MolProp.calcEffectivePolarizability(ctr_atom, molgraph),
+            MolProp.getPEOESigmaCharge(ctr_atom),
+            ForceField.getMMFF94Charge(ctr_atom),
+            MolProp.calcPiElectronegativity(ctr_atom, molgraph),
+            MolProp.getPEOESigmaElectronegativity(ctr_atom),
+            MolProp.calcInductiveEffect(ctr_atom, molgraph),
+        ],
+        dtype=float,
+    )
 
-        descriptors = {
-            "longestMaxTopDistinMolecule": max_topo_dist,
-            "highestMaxTopDistinMatrixRow": max_dist_center,
-            "diffSPAN": max_topo_dist - max_dist_center,
-            "refSPAN": max_dist_center / max_topo_dist if max_topo_dist != 0 else 0,
-        }
 
-        return list(descriptors.keys()), np.array(list(descriptors.values())).round(4)
+TOPOLOGICAL_DESCRIPTOR_NAMES = [
+    "longestMaxTopDistinMolecule",
+    "highestMaxTopDistinMatrixRow",
+    "diffSPAN",
+    "refSPAN",
+]
 
-    def generate_descriptors(
-        self, ctr_atom: Chem.Atom, molgraph: Chem.MolecularGraph
-    ) -> tuple[list[str], np.ndarray]:
-        full_descriptor_names = []
-        full_descriptors = np.array([], dtype=float)
 
-        for f in [self.generate_fp, self.generate_pchem, self.generate_topo]:
-            descriptor_names, descriptors = f(ctr_atom, molgraph)
+def generate_topological_descriptors(
+    ctr_atom: Chem.Atom,
+    molgraph: Chem.MolecularGraph,
+) -> npt.NDArray[np.float64]:
+    _prepare_mol(molgraph)
 
-            full_descriptor_names += descriptor_names
-            full_descriptors = np.concatenate((full_descriptors, descriptors))
+    max_topo_dist = _max_topological_distance(molgraph)
+    max_dist_center = _max_distance_from_reference(molgraph, ctr_atom)
 
-        return full_descriptor_names, full_descriptors
+    return np.array(
+        [
+            max_topo_dist,
+            max_dist_center,
+            max_topo_dist - max_dist_center,
+            max_dist_center / max_topo_dist if max_topo_dist != 0 else 0,
+        ],
+        dtype=float,
+    )
 
 
 def _prepare_mol(mol: Chem.Molecule) -> None:

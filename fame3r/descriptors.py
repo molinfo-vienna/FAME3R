@@ -7,7 +7,14 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils._set_output import _SetOutputMixin
 from sklearn.utils.validation import check_array, check_is_fitted
 
-from fame3r._internal import DescriptorGenerator
+from fame3r._internal import (
+    PHYSICOCHEMICAL_DESCRIPTOR_NAMES,
+    TOPOLOGICAL_DESCRIPTOR_NAMES,
+    generate_fingerprint_names,
+    generate_fingerprints,
+    generate_physicochemical_descriptors,
+    generate_topological_descriptors,
+)
 
 __all__ = ["FAME3RVectorizer"]
 
@@ -18,18 +25,27 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
         *,
         radius: int = 5,
         input: Literal["smiles", "cdpkit"] = "smiles",
+        output: list[Literal["fingerprint", "physicochemical", "topological"]] = [
+            "fingerprint",
+            "physicochemical",
+            "topological",
+        ],
     ) -> None:
         self.radius = radius
         self.input = input
+        self.output = output
 
     def fit(self, X=None, y=None):
-        example_mol = parseSMILES("C")
-
-        self.inner_ = DescriptorGenerator(radius=self.radius)
-        self.feature_names_ = self.inner_.generate_descriptors(
-            example_mol.getAtom(0), example_mol
-        )[0]
         self.n_features_in_ = 1
+        self.feature_names_ = []
+
+        for subset in self.output:
+            if subset == "fingerprint":
+                self.feature_names_.extend(generate_fingerprint_names(self.radius))
+            elif subset == "physicochemical":
+                self.feature_names_.extend(PHYSICOCHEMICAL_DESCRIPTOR_NAMES)
+            elif subset == "topological":
+                self.feature_names_.extend(TOPOLOGICAL_DESCRIPTOR_NAMES)
 
         return self
 
@@ -62,7 +78,29 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
         if len(som_atoms) != 1:
             raise ValueError(f"only one SOM atom per sample is supported: {X}")
 
-        return self.inner_.generate_descriptors(som_atoms[0], som_atoms[0].molecule)[1]
+        descriptors = []
+
+        for subset in self.output:
+            if subset == "fingerprint":
+                descriptors.append(
+                    generate_fingerprints(
+                        som_atoms[0], som_atoms[0].molecule, radius=self.radius
+                    )
+                )
+            elif subset == "physicochemical":
+                descriptors.append(
+                    generate_physicochemical_descriptors(
+                        som_atoms[0], som_atoms[0].molecule
+                    ).round(4)
+                )
+            elif subset == "topological":
+                descriptors.append(
+                    generate_topological_descriptors(
+                        som_atoms[0], som_atoms[0].molecule
+                    ).round(4)
+                )
+
+        return np.concat(descriptors, dtype=float)
 
     def get_feature_names_out(self, input_features=None):
         check_is_fitted(self)
