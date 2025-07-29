@@ -1,8 +1,8 @@
-from typing import Any
+from typing import Literal
 
 import numpy as np
 import numpy.typing as npt
-from CDPL.Chem import AtomProperty, parseSMILES  # type:ignore
+from CDPL.Chem import Atom, AtomProperty, parseSMILES  # pyright:ignore
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils._set_output import _SetOutputMixin
 from sklearn.utils.validation import check_array, check_is_fitted
@@ -13,24 +13,31 @@ __all__ = ["FAME3RVectorizer"]
 
 
 class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
-    def __init__(self, radius: int = 5) -> None:
-        self.radius: int = radius
+    def __init__(
+        self,
+        *,
+        radius: int = 5,
+        input: Literal["smiles", "cdpkit"] = "smiles",
+    ) -> None:
+        self.radius = radius
+        self.input = input
 
-    def fit(self, X: Any = None, y: None = None):
+    def fit(self, X=None, y=None):
         example_mol = parseSMILES("C")
 
         self.inner_ = DescriptorGenerator(radius=self.radius)
         self.feature_names_ = self.inner_.generate_descriptors(
             example_mol.getAtom(0), example_mol
         )[0]
+        self.n_features_in_ = 1
 
         return self
 
-    def transform(self, X: Any):
+    def transform(self, X):
         check_is_fitted(self)
         X = check_array(
             X,
-            dtype="str",
+            dtype="object",
             ensure_2d=True,
             ensure_min_samples=0,
             estimator=FAME3RVectorizer,
@@ -38,42 +45,38 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
 
         return np.apply_along_axis(lambda row: self.transform_one(row[0]), 1, X)
 
-    def transform_one(self, X: Any) -> npt.NDArray[np.float64]:
+    def transform_one(self, X) -> npt.NDArray[np.float64]:
         check_is_fitted(self)
 
-        if not isinstance(X, str):
-            return self._empty_value()
+        if self.input == "smiles":
+            if not isinstance(X, str):
+                raise ValueError("must pass SOM encoded as a SMILES string")
+            som_atoms = _extract_marked_atoms(X)
+        elif self.input == "cdpkit":
+            if not isinstance(X, Atom):
+                raise ValueError("must pass SOM encoded as a CDPKit atom")
+            som_atoms = [X]
+        else:
+            raise ValueError(f"unsupported input type: {self.input}")
 
-        cdpkit_marked_educt = parseSMILES(X)
+        if len(som_atoms) != 1:
+            raise ValueError(f"only one SOM atom per sample is supported: {X}")
 
-        som_atoms_unordered = {
-            atom.getProperty(AtomProperty.ATOM_MAPPING_ID): atom
-            for atom in cdpkit_marked_educt.getAtoms()
-            if atom.getProperty(AtomProperty.ATOM_MAPPING_ID)
-        }
-
-        # TODO: Add warning or error
-        if len(som_atoms_unordered) != 1:
-            return self._empty_value()
-
-        descriptors = [
-            self.inner_.generate_descriptors(
-                som_atoms_unordered[i], cdpkit_marked_educt
-            )[1]
-            for i in sorted(som_atoms_unordered.keys())
-        ]
-
-        return np.asarray(descriptors, dtype=np.float64)[0]
+        return self.inner_.generate_descriptors(som_atoms[0], som_atoms[0].molecule)[1]
 
     def get_feature_names_out(self, input_features=None):
         check_is_fitted(self)
 
         return self.feature_names_
 
-    def _empty_value(self):
-        check_is_fitted(self)
 
-        return np.full(len(self.feature_names_), np.nan)
+def _extract_marked_atoms(smiles: str) -> list[Atom]:
+    marked_mol = parseSMILES(smiles)
 
+    som_atoms_unordered: dict[int, Atom] = {
+        atom.getProperty(AtomProperty.ATOM_MAPPING_ID): atom
+        for atom in marked_mol.getAtoms()
+        if atom.getProperty(AtomProperty.ATOM_MAPPING_ID)
+    }
 
-# check_estimator(Fame3RVectorizer())
+    return [som_atoms_unordered[i] for i in sorted(som_atoms_unordered.keys())]
