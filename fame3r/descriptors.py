@@ -5,7 +5,7 @@ import numpy.typing as npt
 from CDPL.Chem import Atom, AtomProperty, parseSMILES  # pyright:ignore
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils._set_output import _SetOutputMixin
-from sklearn.utils.validation import check_array, check_is_fitted
+from sklearn.utils.validation import check_is_fitted, validate_data
 
 from fame3r._internal import (
     PHYSICOCHEMICAL_DESCRIPTOR_NAMES,
@@ -52,8 +52,10 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
 
     def transform(self, X):
         check_is_fitted(self)
-        X = check_array(
+        X = validate_data(
+            self,
             X,
+            reset=False,
             dtype="object",
             ensure_2d=True,
             ensure_min_samples=0,
