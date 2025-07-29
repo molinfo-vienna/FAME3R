@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "fame3r"
 version = "2.0.0"
 description = "FAME3R: a re-implementation of the FAME3 model"
-readme = "README.md"
+readme = "README.rst"
 requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [
@@ -30,6 +30,7 @@ tests = [
 docs = [
     "sphinx>=8.2.3",
     "sphinx-book-theme>=1.1.4",
+    "sphinx-copybutton>=0.5.2",
 ]
 dev = [
     "basedpyright>=1.29.4",
