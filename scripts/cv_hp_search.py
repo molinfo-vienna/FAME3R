@@ -13,18 +13,31 @@ The number of folds can be set by changing the num_folds argument. Default is 10
 """
 
 import argparse
-import os
-import sys
 from collections import Counter
 from datetime import datetime
-from statistics import mean, stdev
+from pathlib import Path
 
 import numpy as np
+from CDPL.Chem import (
+    Atom,
+    BasicMolecule,
+    FileSDFMoleculeReader,
+    MolecularGraph,
+    getStructureData,
+)
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import average_precision_score, make_scorer, matthews_corrcoef
+from sklearn.metrics import (
+    average_precision_score,
+    f1_score,
+    make_scorer,
+    matthews_corrcoef,
+    precision_score,
+    recall_score,
+    roc_auc_score,
+)
 from sklearn.model_selection import GridSearchCV, GroupKFold
 
-from fame3r import FAMEDescriptors, compute_metrics
+from fame3r import FAME3RVectorizer
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -74,6 +87,61 @@ def parse_arguments() -> argparse.Namespace:
     return parse_args
 
 
+def compute_metrics(
+    y_true: np.ndarray,
+    y_prob: np.ndarray,
+    y_pred: np.ndarray,
+    mol_num_id: np.ndarray,
+) -> tuple[float, float, float, float, float, float, float]:
+    """
+    Compute various performance metrics for binary classification.
+
+    Args:
+        y_true (np.ndarray): Ground truth binary labels.
+        y_prob (np.ndarray): Predicted probabilities for the positive class.
+        y_pred (np.ndarray): Predicted binary labels.
+        mol_num_id (np.ndarray): Array of numerical molecule IDs corresponding to each data point.
+
+    Returns:
+        tuple[float, float, float, float, float, float, float]:
+            A tuple containing AUROC, AP, F1, MCC, precision, recall, and top-2 success rate.
+    """
+    # Basic metrics
+    auroc = roc_auc_score(y_true, y_prob)
+    ap = average_precision_score(y_true, y_prob)
+    f1 = f1_score(y_true, y_pred)
+    mcc = matthews_corrcoef(y_true, y_pred)
+    precision = precision_score(y_true, y_pred)
+    recall = recall_score(y_true, y_pred)
+
+    # Calculate Top-2 success rate
+    unique_mol_num_ids, _ = np.unique(mol_num_id, return_index=True)
+    top2_sucesses = 0
+
+    for i in unique_mol_num_ids:
+        mask = mol_num_id == i
+        masked_y_true = y_true[mask]
+        masked_y_prob = y_prob[mask]
+
+        # Sort by predicted probability (descending) and take the top 2
+        top_2_indices = np.argsort(masked_y_prob)[-2:]
+        if masked_y_true[top_2_indices].sum() > 0:
+            top2_sucesses += 1
+
+    top2_rate = top2_sucesses / len(unique_mol_num_ids)
+
+    return auroc, ap, f1, mcc, precision, recall, top2_rate
+
+
+def extract_som_labels(mol: MolecularGraph) -> list[tuple[Atom, bool]]:
+    structure_data = {
+        entry.header[2:].split(">")[0]: entry.data for entry in getStructureData(mol)
+    }
+    som_indices = eval(structure_data["soms"])
+
+    return [(atom, int(atom.index in som_indices)) for atom in mol.getAtoms()]  # pyright:ignore
+
+
 def main():
     """Application entry point."""
     start_time = datetime.now()
@@ -81,22 +149,33 @@ def main():
     args = parse_arguments()
     print(f"Descriptor radius: {args.radius}")
 
-    if not os.path.exists(args.out_folder):
-        os.makedirs(args.out_folder)
-        print("New output folder is created.")
+    print("Loading training data...")
 
-    print("Computing descriptors...")
+    som_atoms_labeled: list[tuple[Atom, bool]] = []
 
-    descriptors_generator = FAMEDescriptors(args.radius)
-    (
-        mol_num_ids,
-        _mol_ids,
-        _atom_ids,
-        som_labels,
-        descriptors,
-    ) = descriptors_generator.compute_fame_descriptors(
-        args.input_file, args.out_folder, has_soms=True
+    reader = FileSDFMoleculeReader(args.input_file)
+    mol = BasicMolecule()
+    while reader.read(mol):  # pyright:ignore
+        som_atoms_labeled.extend(extract_som_labels(mol))
+        mol = BasicMolecule()
+
+    print(f"Training data: {len(som_atoms_labeled)} data points")
+
+    print("Extracting features...")
+
+    # Unfortunately, this monkey-patching is required to get CDPKit
+    # objects like atoms and molecules into NumPy arrays...
+    del Atom.__getitem__
+
+    som_atoms = [[som_atom] for som_atom, _ in som_atoms_labeled]
+    labels = [label for _, label in som_atoms_labeled]
+    containing_mols = [atom.molecule.getObjectID() for atom, _ in som_atoms_labeled]
+
+    descriptors = FAME3RVectorizer(radius=args.radius, input="cdpkit").fit_transform(
+        som_atoms
     )
+
+    print("Performing hyperparameter optimization using GridSearchCV...")
 
     param_grid = {
         "n_estimators": [100, 250, 500, 750],
@@ -111,26 +190,26 @@ def main():
 
     kf = GroupKFold(n_splits=args.num_folds, random_state=42, shuffle=True)
 
-    print("Performing hyperparameter optimization using GridSearchCV...")
     grid_search = GridSearchCV(
         RandomForestClassifier(random_state=42),
         param_grid,
-        cv=kf.split(descriptors, som_labels, groups=mol_num_ids),
+        cv=kf.split(descriptors, labels, groups=containing_mols),
         scoring=scorer,
-        n_jobs=-1,
+        n_jobs=1,
         verbose=3,
     )
 
-    grid_search.fit(descriptors, som_labels)
+    grid_search.fit(descriptors, labels)
     best_model = grid_search.best_estimator_
 
     print(f"Best parameters found: {grid_search.best_params_}")
 
     # Save best hyperparameters to a file
-    best_params_file = os.path.join(args.out_folder, "best_hyperparameters.txt")
-    with open(best_params_file, "w", encoding="UTF-8") as file:
+    best_params_file = Path(args.out_folder) / "best_hyperparameters.txt"
+    with best_params_file.open("w", encoding="UTF-8") as f:
         for param, value in grid_search.best_params_.items():
-            file.write(f"{param}: {value}\n")
+            f.write(f"{param}: {value}\n")
+
     print(f"Best hyperparameters saved to {best_params_file}")
 
     metrics: dict[str, list[float]] = {
@@ -145,17 +224,16 @@ def main():
 
     best_thresholds = []
     for i, (train_index, val_index) in enumerate(
-        kf.split(descriptors, som_labels, groups=mol_num_ids)
+        kf.split(descriptors, labels, groups=containing_mols)
     ):
-        print(f"Fold {i+1}")
+        print(f"Fold {i + 1}")
 
-        assert som_labels is not None, "SOM labels are missing"
-        y_true_train = som_labels[train_index]
-        descriptors_train = descriptors[train_index, :]
+        y_true_train = np.array(labels)[train_index]
+        descriptors_train = np.array(descriptors)[train_index, :]
 
-        decriptors_val = descriptors[val_index, :]
-        y_true_val = som_labels[val_index]
-        mol_num_id_val = mol_num_ids[val_index]
+        decriptors_val = np.array(descriptors)[val_index, :]
+        y_true_val = np.array(labels)[val_index]
+        mol_num_id_val = np.array(containing_mols)[val_index]
 
         print("Training model with best parameters...")
         best_model.fit(descriptors_train, y_true_train)
@@ -176,7 +254,7 @@ def main():
                 best_mcc = mcc
                 best_threshold = threshold
 
-        print(f"Best threshold for fold {i+1}: {best_threshold}")
+        print(f"Best threshold for fold {i + 1}: {best_threshold}")
         best_thresholds.append(best_threshold)
 
         y_pred = (y_prob > best_threshold).astype(int)
@@ -206,23 +284,20 @@ def main():
     print(f"Majority vote threshold: {majority_threshold}")
 
     # Save optimal thresholds
-    with open(best_params_file, "a", encoding="UTF-8") as file:
-        file.write(f"decision_threshold: {round(majority_threshold, 1)}\n")
+    with open(best_params_file, "a", encoding="UTF-8") as f:
+        f.write(f"decision_threshold: {round(majority_threshold, 1)}\n")
     print(f"Optimal threshold saved to {best_params_file}")
 
     # Save metrics
-    metrics_file = os.path.join(
-        args.out_folder, f"{args.num_folds}_fold_cv_metrics.txt"
-    )
-    with open(metrics_file, "w", encoding="UTF-8") as file:
+    metrics_file = Path(args.out_folder) / f"{args.num_folds}_fold_cv_metrics.txt"
+    with open(metrics_file, "w", encoding="UTF-8") as f:
         for metric, scores in metrics.items():
-            file.write(
-                f"{metric}: {round(mean(scores), 4)} +/- {round(stdev(scores), 4)}\n"
+            f.write(
+                f"{metric}: {np.mean(scores).round(4)} +/- {np.std(scores).round(4)}\n"
             )
     print(f"Metrics saved to {metrics_file}")
 
     print("Finished in:", datetime.now() - start_time)
-    sys.exit(0)
 
 
 if __name__ == "__main__":

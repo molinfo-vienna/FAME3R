@@ -9,15 +9,20 @@ The script also computes FAME scores if the -fs flag is set.
 
 import argparse
 import csv
-import glob
-import os
-import sys
 from datetime import datetime
+from pathlib import Path
 
-import pandas as pd
-from joblib import load
+import joblib
+from CDPL.Chem import (
+    Atom,
+    BasicMolecule,
+    FileSDFMoleculeReader,
+    MolecularGraph,
+    generateSMILES,
+    getStructureData,
+)
 
-from fame3r import FAMEDescriptors, FAMEScores
+from fame3r import FAME3RVectorizer
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -44,10 +49,10 @@ def parse_arguments() -> argparse.Namespace:
     )
     parser.add_argument(
         "-o",
-        dest="out_folder",
+        dest="out_file",
         required=True,
-        metavar="<Output folder>",
-        help="Output location",
+        metavar="<Output file>",
+        help="Output file",
         type=str,
     )
     parser.add_argument(
@@ -78,6 +83,15 @@ def parse_arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def extract_som_labels(mol: MolecularGraph) -> list[tuple[Atom, bool]]:
+    structure_data = {
+        entry.header[2:].split(">")[0]: entry.data for entry in getStructureData(mol)
+    }
+    som_indices = eval(structure_data["soms"])
+
+    return [(atom, int(atom.index in som_indices)) for atom in mol.getAtoms()]  # pyright:ignore
+
+
 def main():
     """Application entry point."""
     start_time = datetime.now()
@@ -85,52 +99,65 @@ def main():
     args = parse_arguments()
     print(f"Radius: {args.radius}")
 
-    if not os.path.exists(args.out_folder):
-        os.makedirs(args.out_folder)
-        print("The new output folder is created.")
+    som_atoms_labeled: list[tuple[Atom, bool]] = []
 
-    print("Computing descriptors...")
-    descriptors_generator = FAMEDescriptors(args.radius)
-    mol_num_ids, mol_ids, atom_ids, _, descriptors = (
-        descriptors_generator.compute_fame_descriptors(
-            args.input_file, args.out_folder, has_soms=False
-        )
+    reader = FileSDFMoleculeReader(args.input_file)
+    mol = BasicMolecule()
+    while reader.read(mol):  # pyright:ignore
+        som_atoms_labeled.extend(extract_som_labels(mol))
+        mol = BasicMolecule()
+
+    print(f"Training data: {len(som_atoms_labeled)} data points")
+
+    print("Loading models...")
+    classifier = joblib.load(Path(args.model_folder) / "model.joblib")
+    if args.compute_fame_scores:
+        score_estimator = joblib.load(Path(args.model_folder) / "fame_scorer.joblib")
+
+    print("Extracting features...")
+
+    # Unfortunately, this monkey-patching is required to get CDPKit
+    # objects like atoms and molecules into NumPy arrays...
+    del Atom.__getitem__
+
+    features = FAME3RVectorizer(radius=args.radius, input="cdpkit").fit_transform(
+        [[som_atom] for som_atom, _ in som_atoms_labeled]
     )
 
-    print(f"Data: {len(set(mol_num_ids))} molecules")
-
-    print("Loading model...")
-    clf = load(os.path.join(args.model_folder, "model.joblib"))
-
     print("Predicting SOMs...")
-    predictions = clf.predict_proba(descriptors)[:, 1]
+
+    predictions = classifier.predict_proba(features)[:, 1]
     predictions_binary = (predictions > args.threshold).astype(int)
 
-    fame_scores = None
     if args.compute_fame_scores:
         print("Computing FAME scores...")
-        fame_scores_generator = FAMEScores(args.model_folder, num_nearest_neighbors=3)
-        # Compute the FAME scores for the test set, excluding the physicochemical and topological descriptors
-        fame_scores = fame_scores_generator.compute_fame_scores(descriptors[:,:-14])
+        # Compute the FAME scores for the test set, excluding the
+        # physicochemical and topological descriptors
+        fame_scores = score_estimator.predict(features[:, :-14])
+        print(fame_scores.shape)
 
-    predictions_file = os.path.join(args.out_folder, "predictions.csv")
-    with open(predictions_file, "w", encoding="UTF-8", newline="") as file:
-        writer = csv.writer(file)
-        headers = ["mol_id", "atom_id", "y_prob", "y_pred"]
-        if args.compute_fame_scores:
-            headers.append("fame_score")
-        writer.writerow(headers)
+    with Path(args.out_file).open("w", encoding="UTF-8", newline="") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=["smiles", "atom_id", "y_pred", "y_true", "y_prob"]
+            + (["fame_score"] if args.compute_fame_scores else []),
+        )
+        writer.writeheader()
 
-        for i in range(len(mol_ids)):
-            row = [mol_ids[i], atom_ids[i], predictions[i], predictions_binary[i]]
-            if args.compute_fame_scores:
-                row.append(round(fame_scores[i], 2))
-            writer.writerow(row)
+        for i in range(len(som_atoms_labeled)):
+            writer.writerow(
+                {
+                    "smiles": generateSMILES(som_atoms_labeled[i][0].molecule),
+                    "atom_id": som_atoms_labeled[i][0].index,
+                    "y_pred": predictions_binary[i],
+                    "y_true": som_atoms_labeled[i][1],
+                    "y_prob": predictions[i],
+                }
+                | ({"fame_score": fame_scores[i]} if args.compute_fame_scores else {})
+            )
 
-    print(f"Predictions saved to {predictions_file}")
+    print(f"Predictions saved to {args.out_file}")
     print("Finished in:", datetime.now() - start_time)
-
-    sys.exit(0)
 
 
 if __name__ == "__main__":
