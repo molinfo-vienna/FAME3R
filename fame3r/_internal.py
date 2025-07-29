@@ -104,7 +104,7 @@ PHYSICOCHEMICAL_DESCRIPTOR_NAMES = [
 def generate_physicochemical_descriptors(
     ctr_atom: Chem.Atom,
     molgraph: Chem.MolecularGraph,
-) -> npt.NDArray[np.float64]:
+) -> npt.NDArray[np.floating]:
     return np.array(
         [
             MolProp.getHeavyAtomCount(ctr_atom),
@@ -133,7 +133,7 @@ TOPOLOGICAL_DESCRIPTOR_NAMES = [
 def generate_topological_descriptors(
     ctr_atom: Chem.Atom,
     molgraph: Chem.MolecularGraph,
-) -> npt.NDArray[np.float64]:
+) -> npt.NDArray[np.floating]:
     max_topo_dist = _max_topological_distance(molgraph)
     max_dist_center = _max_distance_from_reference(molgraph, ctr_atom)
 

@@ -126,7 +126,7 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
 
         return np.apply_along_axis(lambda row: self.transform_one(row), 1, X)
 
-    def transform_one(self, X) -> npt.NDArray[np.float64]:
+    def transform_one(self, X) -> npt.NDArray[np.floating]:
         """Transform a single SOM (site of metabolism) to feature vector.
 
         The sample is provided as an 1d array with shape (1,).
