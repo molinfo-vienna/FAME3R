@@ -59,7 +59,7 @@ def compute_metrics(
     y_prob: np.ndarray,
     y_pred: np.ndarray,
     mol_num_id: np.ndarray,
-) -> tuple[float, float, float, float, float, float, float]:
+):
     """
     Compute various performance metrics for binary classification.
 
@@ -97,7 +97,7 @@ def compute_metrics(
 
     top2_rate = top2_sucesses / len(unique_mol_num_ids)
 
-    return auroc, ap, f1, mcc, precision, recall, top2_rate
+    return float(auroc), float(ap), f1, mcc, precision, recall, top2_rate
 
 
 def main():

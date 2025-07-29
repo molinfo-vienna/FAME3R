@@ -1,3 +1,6 @@
+# pyright: reportAttributeAccessIssue=false
+
+
 """Trains a re-implementation of the FAME3 model.
 
 This script trains a random forest classifier using the FAME descriptors.

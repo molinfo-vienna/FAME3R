@@ -1,3 +1,5 @@
+# pyright: reportAttributeAccessIssue=false
+
 """Applies a trained re-implementation of the FAME3 model to unlabeled data.
 
 This script saves the per-atom predictions to a CSV file.
