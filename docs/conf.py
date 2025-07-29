@@ -25,6 +25,7 @@ author = "Roxane Jacob, Leo Gaskin"
 
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
     "numpydoc",
@@ -48,18 +49,25 @@ html_theme_options = {
     "use_repository_button": True,
     "use_issues_button": True,
     "launch_buttons": {"colab_url": "https://colab.research.google.com"},
-    "show_toc_level": 3,
+    "show_toc_level": 2,
 }
 
 html_static_path = ["_static"]
 html_css_files = ["fix_theme_toggle.css"]
 
-# -- Options for AutoDoc and Sphinx Python handling --------------------------
+
+# -- Options for AutoDoc, AutoSummary and Sphinx Python handling -------------
 
 autodoc_member_order = "bysource"
 autodoc_typehints_format = "short"
+autosummary_generate = False
 python_use_unqualified_type_names = True
 
+
+# -- Options for numpydoc  ---------------------------------------------------
+# https://numpydoc.readthedocs.io/en/latest/
+
+numpydoc_show_class_members = False
 
 # -- Options for InterSphinx linking -----------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html

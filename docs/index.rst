@@ -3,6 +3,7 @@
 .. toctree::
    :caption: Information
    :maxdepth: 2
+   :hidden:
 
    Home <self>
    source/installation
@@ -11,6 +12,7 @@
 .. toctree::
    :caption: User Guides
    :maxdepth: 2
+   :hidden:
 
    source/tutorials/scripts
    source/tutorials/python_api
@@ -21,9 +23,7 @@
    :hidden:
    :glob:
 
-   source/summary
-   source/modules/*
-   API index <modindex>
+   source/modules/fame3r.*
 
 Indices and search
 ------------------

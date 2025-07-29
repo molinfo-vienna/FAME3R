@@ -26,8 +26,7 @@ from CDPL.Chem import (
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.pipeline import make_pipeline
 
-from fame3r import FAME3RVectorizer
-from fame3r.score import FAME3RScoreEstimator
+from fame3r import FAME3RScoreEstimator, FAME3RVectorizer
 
 
 def parse_arguments() -> argparse.Namespace:

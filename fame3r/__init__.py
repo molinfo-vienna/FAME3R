@@ -1,4 +1,4 @@
-"""FAME3R: a re-implementation of the FAME.AL model."""
+"""Components for building SOM (site-of-metabolism) prediction models."""
 
 from fame3r.descriptors import FAME3RVectorizer
 from fame3r.score import FAME3RScoreEstimator

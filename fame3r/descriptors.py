@@ -43,7 +43,7 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
 
     Examples
     --------
-    >>> from fame3r.descriptors import FAME3RVectorizer
+    >>> from fame3r import FAME3RVectorizer
     >>> FAME3RVectorizer().fit_transform([["CC[C:1]"]])
     array([[1., 0., 0., ..., 2., 0., 1.]], shape=(1, 5006))
     """
