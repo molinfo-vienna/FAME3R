@@ -13,6 +13,7 @@ The script also computes FAME scores if the -fs flag is set.
 import argparse
 import csv
 from datetime import datetime
+from pathlib import Path
 
 import numpy as np
 from sklearn.metrics import (
@@ -23,13 +24,11 @@ from sklearn.metrics import (
     recall_score,
     roc_auc_score,
 )
-from sklearn.utils.discovery import Path
 
 NUM_BOOTSTRAPS = 1000
 
 
 def parse_arguments() -> argparse.Namespace:
-    """Parse command line arguments."""
     parser = argparse.ArgumentParser(
         description="Tests a trained re-implementation of the FAME3 model."
     )
@@ -40,6 +39,14 @@ def parse_arguments() -> argparse.Namespace:
         required=True,
         metavar="<Predictions data file>",
         help="Predictions data file",
+        type=str,
+    )
+    parser.add_argument(
+        "-o",
+        dest="out_file",
+        required=True,
+        metavar="<Output file>",
+        help="Output file",
         type=str,
     )
     parser.add_argument(
@@ -54,30 +61,29 @@ def parse_arguments() -> argparse.Namespace:
     return parse_args
 
 
-def compute_metrics(y_true, y_prob, y_pred, mol_num_id):
-    # Basic metrics
+def top2_rate_score(y_true, y_prob, groups):
+    unique_groups, _ = np.unique(groups, return_index=True)
+    top2_sucesses = 0
+
+    for current_group in unique_groups:
+        mask = groups == current_group
+
+        # Sort by predicted probability (descending) and take the top 2
+        top_2_indices = np.argsort(y_prob[mask])[-2:]
+        if y_true[mask][top_2_indices].sum() > 0:
+            top2_sucesses += 1
+
+    return top2_sucesses / len(unique_groups)
+
+
+def compute_metrics(y_true, y_prob, y_pred, groups):
     auroc = roc_auc_score(y_true, y_prob)
     ap = average_precision_score(y_true, y_prob)
     f1 = f1_score(y_true, y_pred)
     mcc = matthews_corrcoef(y_true, y_pred)
     precision = precision_score(y_true, y_pred)
     recall = recall_score(y_true, y_pred)
-
-    # Calculate Top-2 success rate
-    unique_mol_num_ids, _ = np.unique(mol_num_id, return_index=True)
-    top2_sucesses = 0
-
-    for i in unique_mol_num_ids:
-        mask = mol_num_id == i
-        masked_y_true = y_true[mask]
-        masked_y_prob = y_prob[mask]
-
-        # Sort by predicted probability (descending) and take the top 2
-        top_2_indices = np.argsort(masked_y_prob)[-2:]
-        if masked_y_true[top_2_indices].sum() > 0:
-            top2_sucesses += 1
-
-    top2_rate = top2_sucesses / len(unique_mol_num_ids)
+    top2_rate = top2_rate_score(y_true, y_prob, groups)
 
     return float(auroc), float(ap), f1, mcc, precision, recall, top2_rate
 
@@ -88,13 +94,14 @@ def main():
 
     args = parse_arguments()
 
-    data = [row for row in csv.DictReader(Path(args.input_file).open())]
-    data = np.array(
-        [tuple(row.values()) for row in data],
-        dtype=[(key, "object" if key == "smiles" else "<f8") for key in data[0].keys()],
+    rows = [row for row in csv.DictReader(Path(args.input_file).open())]
+    smiles, y_true, y_pred, y_prob, fame_score = (
+        np.array([row[key] for row in rows], dtype=object if key == "smiles" else float)
+        for key in ["smiles", "y_true", "y_pred", "y_prob", "fame_score"]
     )
 
     print("Computing metrics...")
+
     metrics: dict[str, list[float]] = {
         "AUROC": [],
         "Average precision": [],
@@ -110,11 +117,10 @@ def main():
     for i in range(NUM_BOOTSTRAPS):
         print(f"Bootstrap run: {i}")
 
-        mask = np.zeros(len(data), dtype=bool)
-        for random_smiles in rng.choice(
-            list(set(data["smiles"])), len(set(data["smiles"]))
-        ):
-            mask = mask | (data["smiles"] == random_smiles)
+        mask = np.zeros(len(smiles), dtype=bool)
+        for random_smiles in rng.choice(np.unique(smiles), len(np.unique(smiles))):
+            mask = mask | (smiles == random_smiles)
+
         (
             auroc,
             average_precision,
@@ -124,13 +130,11 @@ def main():
             recall,
             top2,
         ) = compute_metrics(
-            data["y_true"][mask],
-            data["fame_score"][mask] if args.use_fame_score else data["y_prob"],
-            data["y_pred"][mask],
-            data["smiles"][mask],
+            y_true[mask],
+            fame_score[mask] if args.use_fame_score else y_prob[mask],
+            y_pred[mask],
+            smiles[mask],
         )
-
-        print(data["smiles"])
 
         metrics["AUROC"].append(auroc)
         metrics["Average precision"].append(average_precision)
@@ -140,14 +144,13 @@ def main():
         metrics["Recall"].append(recall)
         metrics["Top-2 correctness rate"].append(top2)
 
-    metrics_file = "metrics.txt"
+    print(f"Saving metrics...")
 
-    with Path(metrics_file).open("w", encoding="UTF-8") as file:
+    with Path(args.out_file).open("w", encoding="UTF-8") as f:
         for metric, scores in metrics.items():
-            file.write(
+            f.write(
                 f"{metric}: {np.mean(scores).round(4)} +/- {np.std(scores).round(4)}\n"
             )
-    print(f"Metrics saved to {metrics_file}")
 
     print("Finished in:", datetime.now() - start_time)
 

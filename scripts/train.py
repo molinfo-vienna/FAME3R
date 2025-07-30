@@ -30,7 +30,6 @@ from fame3r import FAME3RScoreEstimator, FAME3RVectorizer
 
 
 def parse_arguments() -> argparse.Namespace:
-    """Parse command line arguments."""
     parser = argparse.ArgumentParser(
         description="Trains a re-implementation of the FAME3 model."
     )

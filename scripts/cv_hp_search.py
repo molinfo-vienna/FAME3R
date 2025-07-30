@@ -43,7 +43,6 @@ from fame3r import FAME3RVectorizer
 
 
 def parse_arguments() -> argparse.Namespace:
-    """Parse command line arguments."""
     parser = argparse.ArgumentParser(
         description="Performs K-fold cross-validation to find the \
             best hyperparameters of a re-implementation of the FAME3 model."
@@ -268,13 +267,13 @@ def main():
     print(f"Majority vote threshold: {majority_threshold}")
 
     # Save optimal thresholds
-    with open(best_params_file, "a", encoding="UTF-8") as f:
+    with best_params_file.open("a", encoding="UTF-8") as f:
         f.write(f"decision_threshold: {round(majority_threshold, 1)}\n")
     print(f"Optimal threshold saved to {best_params_file}")
 
     # Save metrics
     metrics_file = Path(args.out_folder) / f"{args.num_folds}_fold_cv_metrics.txt"
-    with open(metrics_file, "w", encoding="UTF-8") as f:
+    with metrics_file.open("w", encoding="UTF-8") as f:
         for metric, scores in metrics.items():
             f.write(
                 f"{metric}: {np.mean(scores).round(4)} +/- {np.std(scores).round(4)}\n"

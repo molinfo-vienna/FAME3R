@@ -28,7 +28,6 @@ from fame3r import FAME3RVectorizer
 
 
 def parse_arguments() -> argparse.Namespace:
-    """Parse command line arguments."""
     parser = argparse.ArgumentParser(
         description="Applies a trained re-implementation of the FAME3 model to unlabeled data"
     )
