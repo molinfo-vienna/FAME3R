@@ -23,11 +23,9 @@ __all__ = ["FAME3RVectorizer"]
 class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
     """Transforms annotated SOMs (sites of metabolism) into FAME3-like features.
 
-
     Parameters
     ----------
     radius : int, default=5
-
         Radius used for circular fingerprint generation.
 
     input : {"smiles", "cdpkit"}, default="smiles"
@@ -69,10 +67,10 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
         Parameters
         ----------
         X : (ignored)
-            Ignored parameter
+            Ignored parameter.
 
         y : (ignored)
-            Ignored parameter
+            Ignored parameter.
 
         Returns
         -------
@@ -105,12 +103,10 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
         X : array-like of shape (n_samples, 1)
             Input samples.
 
-
         Returns
         -------
         X_new : ndarray array of shape (n_samples, n_features_new)
             Transformed array.
-
         """
 
         check_is_fitted(self)
@@ -138,7 +134,6 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
         ----------
         X : array-like of shape (1,)
             Input sample.
-
 
         Returns
         -------

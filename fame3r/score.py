@@ -25,7 +25,6 @@ class FAME3RScoreEstimator(BaseEstimator, _SetOutputMixin):
         Number of nearest neigbors to consider during FAME score
         calculation. Defaults to 3, as defined in the original paper.
 
-
     Examples
     --------
     >>> from fame3r import FAME3RVectorizer, FAME3RScoreEstimator
@@ -36,7 +35,6 @@ class FAME3RScoreEstimator(BaseEstimator, _SetOutputMixin):
     >>> ).fit([["CC[C:1]"], ["CC[N:1]"], ["CC[O:1]"]])
     >>> pipeline.predict([["[C:1]CC"]])
     array([0.66666667])
-
     """
 
     def __init__(self, n_neighbors: int = 3):
@@ -79,13 +77,11 @@ class FAME3RScoreEstimator(BaseEstimator, _SetOutputMixin):
 
         Parameters
         ----------
-
         X : {array-like, sparse matrix} of shape (n_samples, n_features)
             Query data.
 
         Returns
         -------
-
         y : ndarray of shape (n_samples,)
             The predicted FAME scores.
         """
