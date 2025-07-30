@@ -88,34 +88,6 @@ def parse_arguments() -> argparse.Namespace:
     return parse_args
 
 
-def compute_metrics(y_true, y_prob, y_pred, mol_num_id):
-    # Basic metrics
-    auroc = roc_auc_score(y_true, y_prob)
-    ap = average_precision_score(y_true, y_prob)
-    f1 = f1_score(y_true, y_pred)
-    mcc = matthews_corrcoef(y_true, y_pred)
-    precision = precision_score(y_true, y_pred)
-    recall = recall_score(y_true, y_pred)
-
-    # Calculate Top-2 success rate
-    unique_mol_num_ids, _ = np.unique(mol_num_id, return_index=True)
-    top2_sucesses = 0
-
-    for i in unique_mol_num_ids:
-        mask = mol_num_id == i
-        masked_y_true = y_true[mask]
-        masked_y_prob = y_prob[mask]
-
-        # Sort by predicted probability (descending) and take the top 2
-        top_2_indices = np.argsort(masked_y_prob)[-2:]
-        if masked_y_true[top_2_indices].sum() > 0:
-            top2_sucesses += 1
-
-    top2_rate = top2_sucesses / len(unique_mol_num_ids)
-
-    return float(auroc), float(ap), f1, mcc, precision, recall, top2_rate
-
-
 def extract_som_labels(mol: MolecularGraph) -> list[tuple[Atom, bool]]:
     structure_data = {
         entry.header[2:].split(">")[0]: entry.data for entry in getStructureData(mol)
@@ -123,6 +95,21 @@ def extract_som_labels(mol: MolecularGraph) -> list[tuple[Atom, bool]]:
     som_indices = eval(structure_data["soms"])
 
     return [(atom, int(atom.index in som_indices)) for atom in mol.getAtoms()]  # pyright:ignore
+
+
+def top2_rate_score(y_true, y_prob, groups):
+    unique_groups, _ = np.unique(groups, return_index=True)
+    top2_sucesses = 0
+
+    for current_group in unique_groups:
+        mask = groups == current_group
+
+        # Sort by predicted probability (descending) and take the top 2
+        top_2_indices = np.argsort(y_prob[mask])[-2:]
+        if y_true[mask][top_2_indices].sum() > 0:
+            top2_sucesses += 1
+
+    return top2_sucesses / len(unique_groups)
 
 
 def main():
@@ -243,42 +230,42 @@ def main():
         y_pred = (y_prob > best_threshold).astype(int)
 
         print("Computing metrics...")
-        (
-            auroc,
-            average_precision,
-            f1,
-            mcc,
-            precision,
-            recall,
-            top2,
-        ) = compute_metrics(y_true_val, y_prob, y_pred, mol_num_id_val)
 
-        metrics["AUROC"].append(auroc)
-        metrics["Average precision"].append(average_precision)
+        auroc = roc_auc_score(y_true_val, y_prob)
+        average_precision = average_precision_score(y_true_val, y_prob)
+        f1 = f1_score(y_true_val, y_pred)
+        mcc = matthews_corrcoef(y_true_val, y_pred)
+        precision = precision_score(y_true_val, y_pred)
+        recall = recall_score(y_true_val, y_pred)
+        top2_rate = top2_rate_score(y_true_val, y_prob, mol_num_id_val)
+
+        metrics["AUROC"].append(float(auroc))
+        metrics["Average precision"].append(float(average_precision))
         metrics["F1"].append(f1)
         metrics["MCC"].append(mcc)
         metrics["Precision"].append(precision)
         metrics["Recall"].append(recall)
-        metrics["Top-2 correctness rate"].append(top2)
+        metrics["Top-2 correctness rate"].append(top2_rate)
 
     # Determine the majority vote for the best threshold
     threshold_counts = Counter(best_thresholds)
     majority_threshold = threshold_counts.most_common(1)[0][0]
     print(f"Majority vote threshold: {majority_threshold}")
 
+    print("Saving decision threshold...")
+
     # Save optimal thresholds
     with best_params_file.open("a", encoding="UTF-8") as f:
         f.write(f"decision_threshold: {round(majority_threshold, 1)}\n")
-    print(f"Optimal threshold saved to {best_params_file}")
 
-    # Save metrics
+    print("Saving metrics...")
+
     metrics_file = Path(args.out_folder) / f"{args.num_folds}_fold_cv_metrics.txt"
     with metrics_file.open("w", encoding="UTF-8") as f:
         for metric, scores in metrics.items():
             f.write(
                 f"{metric}: {np.mean(scores).round(4)} +/- {np.std(scores).round(4)}\n"
             )
-    print(f"Metrics saved to {metrics_file}")
 
     print("Finished in:", datetime.now() - start_time)
 

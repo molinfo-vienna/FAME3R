@@ -76,18 +76,6 @@ def top2_rate_score(y_true, y_prob, groups):
     return top2_sucesses / len(unique_groups)
 
 
-def compute_metrics(y_true, y_prob, y_pred, groups):
-    auroc = roc_auc_score(y_true, y_prob)
-    ap = average_precision_score(y_true, y_prob)
-    f1 = f1_score(y_true, y_pred)
-    mcc = matthews_corrcoef(y_true, y_pred)
-    precision = precision_score(y_true, y_pred)
-    recall = recall_score(y_true, y_pred)
-    top2_rate = top2_rate_score(y_true, y_prob, groups)
-
-    return float(auroc), float(ap), f1, mcc, precision, recall, top2_rate
-
-
 def main():
     """Application entry point."""
     start_time = datetime.now()
@@ -99,6 +87,7 @@ def main():
         np.array([row[key] for row in rows], dtype=object if key == "smiles" else float)
         for key in ["smiles", "y_true", "y_pred", "y_prob", "fame_score"]
     )
+    y_rank = fame_score if args.use_fame_score else y_prob
 
     print("Computing metrics...")
 
@@ -121,28 +110,21 @@ def main():
         for random_smiles in rng.choice(np.unique(smiles), len(np.unique(smiles))):
             mask = mask | (smiles == random_smiles)
 
-        (
-            auroc,
-            average_precision,
-            f1,
-            mcc,
-            precision,
-            recall,
-            top2,
-        ) = compute_metrics(
-            y_true[mask],
-            fame_score[mask] if args.use_fame_score else y_prob[mask],
-            y_pred[mask],
-            smiles[mask],
-        )
+        auroc = roc_auc_score(y_true[mask], y_rank[mask])
+        average_precision = average_precision_score(y_true[mask], y_rank[mask])
+        f1 = f1_score(y_true[mask], y_pred[mask])
+        mcc = matthews_corrcoef(y_true[mask], y_pred[mask])
+        precision = precision_score(y_true[mask], y_pred[mask])
+        recall = recall_score(y_true[mask], y_pred[mask])
+        top2_rate = top2_rate_score(y_true[mask], y_rank[mask], smiles[mask])
 
-        metrics["AUROC"].append(auroc)
-        metrics["Average precision"].append(average_precision)
+        metrics["AUROC"].append(float(auroc))
+        metrics["Average precision"].append(float(average_precision))
         metrics["F1"].append(f1)
         metrics["MCC"].append(mcc)
         metrics["Precision"].append(precision)
         metrics["Recall"].append(recall)
-        metrics["Top-2 correctness rate"].append(top2)
+        metrics["Top-2 correctness rate"].append(top2_rate)
 
     print(f"Saving metrics...")
 
