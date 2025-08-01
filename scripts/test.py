@@ -49,12 +49,6 @@ def parse_arguments() -> argparse.Namespace:
         help="Output file",
         type=str,
     )
-    parser.add_argument(
-        "-fs",
-        dest="use_fame_score",
-        action="store_true",
-        help="Use FAME score for ranking",
-    )
 
     parse_args = parser.parse_args()
 
@@ -87,7 +81,6 @@ def main():
         np.array([row[key] for row in rows], dtype=object if key == "smiles" else float)
         for key in ["smiles", "y_true", "y_pred", "y_prob", "fame_score"]
     )
-    y_rank = fame_score if args.use_fame_score else y_prob
 
     print("Computing metrics...")
 
@@ -110,13 +103,13 @@ def main():
         for random_smiles in rng.choice(np.unique(smiles), len(np.unique(smiles))):
             mask = mask | (smiles == random_smiles)
 
-        auroc = roc_auc_score(y_true[mask], y_rank[mask])
-        average_precision = average_precision_score(y_true[mask], y_rank[mask])
+        auroc = roc_auc_score(y_true[mask], y_prob[mask])
+        average_precision = average_precision_score(y_true[mask], y_prob[mask])
         f1 = f1_score(y_true[mask], y_pred[mask])
         mcc = matthews_corrcoef(y_true[mask], y_pred[mask])
         precision = precision_score(y_true[mask], y_pred[mask])
         recall = recall_score(y_true[mask], y_pred[mask])
-        top2_rate = top2_rate_score(y_true[mask], y_rank[mask], smiles[mask])
+        top2_rate = top2_rate_score(y_true[mask], y_prob[mask], smiles[mask])
 
         metrics["AUROC"].append(float(auroc))
         metrics["Average precision"].append(float(average_precision))
