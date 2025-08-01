@@ -186,7 +186,7 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
                     ).round(4)
                 )
 
-        return np.concat(descriptors, dtype=float)
+        return np.concatenate(descriptors, dtype=float)
 
     def get_feature_names_out(self, input_features=None):
         """Get output feature names for transformation.

@@ -50,7 +50,7 @@ def generate_fingerprints(
     ctr_atom: Chem.Atom,
     molgraph: Chem.MolecularGraph,
     radius: int,
-) -> npt.NDArray[np.bool]:
+) -> npt.NDArray[np.bool_]:
     # Calculate total descriptor size
     fingerprints_size = (radius + 1) * len(SYBYL_ATOM_TYPE_IDX_CDPKIT) * 32
 
