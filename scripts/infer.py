@@ -111,7 +111,9 @@ def main():
     print(f"Training data: {len(som_atoms_labeled)} data points")
 
     print("Loading models...")
-    classifier = joblib.load(Path(args.model_folder) / "model.joblib")
+    classifier = joblib.load(
+        Path(args.model_folder) / "random_forest_classifier.joblib"
+    )
     if args.compute_fame_scores:
         score_estimator = joblib.load(Path(args.model_folder) / "fame_scorer.joblib")
 

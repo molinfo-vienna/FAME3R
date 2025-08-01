@@ -181,7 +181,7 @@ def main():
     Path(args.out_folder).mkdir(exist_ok=True)
     joblib.dump(
         rf_pipeline.named_steps["randomforestclassifier"],
-        Path(args.out_folder) / "model.joblib",
+        Path(args.out_folder) / "random_forest_classifier.joblib",
     )
     joblib.dump(scorer, Path(args.out_folder) / "fame_scorer.joblib")
 
