@@ -168,13 +168,12 @@ def main():
 
     print("Training FAME score model...")
 
-    # TODO: fingerprint only vectorizer
-    positive_labeled_fingerprints = FAME3RVectorizer(
-        radius=args.radius, input="cdpkit"
-    ).fit_transform([[som_atom] for som_atom, label in som_atoms_labeled if label])[
-        :, :-14
-    ]
-    scorer = FAME3RScoreEstimator().fit(positive_labeled_fingerprints)
+    fs_pipeline = make_pipeline(
+        FAME3RVectorizer(radius=args.radius, input="cdpkit", output=["fingerprint"]),
+        FAME3RScoreEstimator(),
+    ).fit(
+        [[som_atom] for som_atom, _ in som_atoms_labeled],
+    )
 
     print("Saving models...")
 
@@ -183,7 +182,10 @@ def main():
         rf_pipeline.named_steps["randomforestclassifier"],
         Path(args.out_folder) / "random_forest_classifier.joblib",
     )
-    joblib.dump(scorer, Path(args.out_folder) / "fame_scorer.joblib")
+    joblib.dump(
+        fs_pipeline.named_steps["fame3rscoreesttimator"],
+        Path(args.out_folder) / "fame_scorer.joblib",
+    )
 
     print("Finished in:", datetime.now() - start_time)
 
