@@ -126,7 +126,7 @@ def main():
         metrics["Recall"].append(recall)
         metrics["Top-2 correctness rate"].append(top2_rate)
 
-    print(f"Saving metrics...")
+    print("Saving metrics...")
 
     with Path(args.out_file).open("w", encoding="UTF-8") as f:
         for metric, scores in metrics.items():
