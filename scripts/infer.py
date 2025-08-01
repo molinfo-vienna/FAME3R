@@ -15,6 +15,7 @@ from datetime import datetime
 from pathlib import Path
 
 import joblib
+import numpy as np
 from CDPL.Chem import (
     Atom,
     BasicMolecule,
@@ -142,8 +143,14 @@ def main():
     with Path(args.out_file).open("w", encoding="UTF-8", newline="") as f:
         writer = csv.DictWriter(
             f,
-            fieldnames=["smiles", "atom_id", "y_pred", "y_true", "y_prob"]
-            + (["fame_score"] if args.compute_fame_scores else []),
+            fieldnames=[
+                "smiles",
+                "atom_id",
+                "y_pred",
+                "y_true",
+                "y_prob",
+                "fame_score",
+            ],
         )
         writer.writeheader()
 
@@ -155,8 +162,10 @@ def main():
                     "y_pred": predictions_binary[i],
                     "y_true": som_atoms_labeled[i][1],
                     "y_prob": predictions[i],
+                    "fame_score": fame_scores[i]
+                    if args.compute_fame_scores
+                    else np.nan,
                 }
-                | ({"fame_score": fame_scores[i]} if args.compute_fame_scores else {})
             )
 
     print(f"Predictions saved to {args.out_file}")
