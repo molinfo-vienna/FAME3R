@@ -21,7 +21,7 @@ __all__ = ["FAME3RVectorizer"]
 
 
 class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
-    """Transforms annotated SOMs (sites of metabolism) into FAME3-like features.
+    """Transforms atom environments into FAME3-like features.
 
     Parameters
     ----------
@@ -30,9 +30,10 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
 
     input : {"smiles", "cdpkit"}, default="smiles"
 
-        Format of the provided SOMs. Can be either "smiles" to accept a SMILES
-        codes with a single atom mapping number each specifying the SOM, or
-        "cdpkit" to accept CDPKit Atom objects.
+        Format of the provided atoms and their environment. Can be either
+        "smiles" to accept SMILES codes with a single atom mapping number each
+        specifying the atom used to generate descriptors, or "cdpkit" to accept
+        CDPKit Atom objects.
 
     output : list of {"fingerprint", "physicochemical", "topological"}
 
@@ -91,7 +92,7 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
         return self
 
     def transform(self, X):
-        """Transform SOMs (sites of metabolism) to feature matrix.
+        """Transform atom environments to feature matrix.
 
         Samples are provided as a 2d array with shape (n_samples, 1).
 
@@ -123,7 +124,7 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
         return np.apply_along_axis(lambda row: self.transform_one(row), 1, X)
 
     def transform_one(self, X) -> npt.NDArray[np.floating]:
-        """Transform a single SOM (site of metabolism) to feature vector.
+        """Transform a single atom environment to feature vector.
 
         The sample is provided as an 1d array with shape (1,).
 
@@ -150,11 +151,13 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
 
         if self.input == "smiles":
             if not isinstance(X[0], str):
-                raise ValueError("must pass SOM encoded as a SMILES string")
+                raise ValueError(
+                    "must pass atom encoded as a SMILES string + mapping number"
+                )
             som_atoms = _extract_marked_atoms(X[0])
         elif self.input == "cdpkit":
             if not isinstance(X[0], Atom):
-                raise ValueError("must pass SOM encoded as a CDPKit atom")
+                raise ValueError("must pass atom encoded as a CDPKit Atom")
             som_atoms = [X[0]]
         else:
             raise ValueError(f"unsupported input type: {self.input}")
