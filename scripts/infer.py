@@ -108,7 +108,7 @@ def main():
         som_atoms_labeled.extend(extract_som_labels(mol))
         mol = BasicMolecule()
 
-    print(f"Training data: {len(som_atoms_labeled)} data points")
+    print(f"Data: {reader.getNumRecords()} molecules, {len(som_atoms_labeled)} atoms")
 
     print("Loading models...")
     classifier = joblib.load(
