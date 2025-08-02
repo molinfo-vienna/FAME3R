@@ -395,7 +395,7 @@ def hyperparameters(
     containing_mol_ids = [atom.molecule.getObjectID() for atom, _ in som_atoms_labeled]
 
     atom_count = len(som_atoms_labeled)
-    mol_count = len(containing_mol_ids)
+    mol_count = len(set(containing_mol_ids))
 
     with Spinner(
         title=f"Computing descriptors for {atom_count} atoms ({mol_count} molecules)"
@@ -469,7 +469,7 @@ def threshold(
     containing_mol_ids = [atom.molecule.getObjectID() for atom, _ in som_atoms_labeled]
 
     atom_count = len(som_atoms_labeled)
-    mol_count = len(containing_mol_ids)
+    mol_count = len(set(containing_mol_ids))
 
     with Spinner(
         title=f"Computing descriptors for {atom_count} atoms ({mol_count} molecules)"
