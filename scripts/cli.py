@@ -175,7 +175,7 @@ def train(
         )
 
         with Spinner(
-            title=f"Training random forest on {mol_count} molecules ({atom_count} atoms)"
+            title=f"Training random forest on {atom_count} atoms ({mol_count} molecules)"
         ):
             score_pipeline = make_pipeline(
                 FAME3RVectorizer(radius=radius, input="cdpkit"),
@@ -193,7 +193,7 @@ def train(
 
     if "fame-score" in model_kinds:
         with Spinner(
-            title=f"Training FAME score estimator on {mol_count} molecules ({atom_count} atoms)"
+            title=f"Training FAME score estimator on {atom_count} atoms ({mol_count} molecules)"
         ):
             score_pipeline = make_pipeline(
                 FAME3RVectorizer(radius=radius, input="cdpkit", output=["fingerprint"]),
@@ -394,15 +394,19 @@ def hyperparameters(
     labels = [label for _, label in som_atoms_labeled]
     containing_mol_ids = [atom.molecule.getObjectID() for atom, _ in som_atoms_labeled]
 
-    descriptors = FAME3RVectorizer(radius=radius, input="cdpkit").fit_transform(
-        [[som_atom] for som_atom, _ in som_atoms_labeled]
-    )
+    atom_count = len(som_atoms_labeled)
+    mol_count = len(containing_mol_ids)
+
+    with Spinner(
+        title=f"Computing descriptors for {atom_count} atoms ({mol_count} molecules)"
+    ):
+        descriptors = FAME3RVectorizer(radius=radius, input="cdpkit").fit_transform(
+            [[som_atom] for som_atom, _ in som_atoms_labeled]
+        )
 
     k_fold = GroupKFold(n_splits=num_folds, random_state=42, shuffle=True)
 
-    with Spinner(
-        title=f"Performing CV on {len(containing_mol_ids)} molecules ({len(som_atoms_labeled)} atoms)"
-    ):
+    with Spinner(title=f"Performing CV on {atom_count} atoms ({mol_count} molecules)"):
         grid_search = GridSearchCV(
             RandomForestClassifier(random_state=42),
             {
@@ -464,16 +468,22 @@ def threshold(
     labels = [label for _, label in som_atoms_labeled]
     containing_mol_ids = [atom.molecule.getObjectID() for atom, _ in som_atoms_labeled]
 
-    descriptors = FAME3RVectorizer(radius=radius, input="cdpkit").fit_transform(
-        [[som_atom] for som_atom, _ in som_atoms_labeled]
-    )
+    atom_count = len(som_atoms_labeled)
+    mol_count = len(containing_mol_ids)
+
+    with Spinner(
+        title=f"Computing descriptors for {atom_count} atoms ({mol_count} molecules)"
+    ):
+        descriptors = FAME3RVectorizer(radius=radius, input="cdpkit").fit_transform(
+            [[som_atom] for som_atom, _ in som_atoms_labeled]
+        )
 
     k_fold = GroupKFold(n_splits=num_folds, random_state=42, shuffle=True)
 
     classifier = joblib.load(model_path)
 
     with Spinner(
-        title=f"Tuning threshold on {len(containing_mol_ids)} molecules ({len(som_atoms_labeled)} atoms)"
+        title=f"Tuning threshold on {atom_count} atoms ({mol_count} molecules)"
     ):
         tuner = TunedThresholdClassifierCV(
             classifier,
