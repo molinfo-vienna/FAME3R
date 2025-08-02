@@ -497,5 +497,72 @@ def threshold(
     stdout.print(JSON.from_data({"best_threshold": tuner.best_threshold_}))
 
 
+@app.command(
+    name="descriptors",
+    help="Compute FAME3R descriptors for external use.",
+)
+def descriptors(
+    input_path: Annotated[
+        Path,
+        typer.Option(
+            "--input",
+            "-i",
+            help="Path to SOM input data.",
+        ),
+    ],
+    output_path: Annotated[
+        Path,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Path to output descriptors CSV file.",
+        ),
+    ],
+    radius: Annotated[
+        int,
+        typer.Option(
+            "--radius",
+            "-r",
+            help="Atom environment radius in bonds.",
+        ),
+    ] = 5,
+    included_descriptors: Annotated[
+        list[str],
+        typer.Option("--subset", help="Subsets of FAME3R descriptors to generate."),
+    ] = ["fingerprint", "physicochemical", "topological"],
+):
+    som_atoms = read_labeled_atoms_from_sdf_file(input_path)
+    containing_mol_ids = [atom.molecule.getObjectID() for atom, _ in som_atoms]
+
+    atom_count = len(som_atoms)
+    mol_count = len(set(containing_mol_ids))
+
+    vectorizer = FAME3RVectorizer(
+        radius=radius,
+        input="cdpkit",
+        output=included_descriptors,  # pyright:ignore[reportArgumentType]
+    )
+
+    with Spinner(
+        title=f"Computing descriptors for {atom_count} atoms ({mol_count} molecules)"
+    ):
+        descriptors = vectorizer.fit_transform(
+            [[som_atom] for som_atom, _ in som_atoms]
+        )
+
+    with output_path.open("w", encoding="UTF-8", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["smiles", "atom_id"] + vectorizer.get_feature_names_out())
+
+        for i in range(len(som_atoms)):
+            writer.writerow(
+                [
+                    generateSMILES(som_atoms[i][0].molecule),
+                    som_atoms[i][0].index,
+                ]
+                + list(descriptors[i])
+            )
+
+
 if __name__ == "__main__":
     app()
