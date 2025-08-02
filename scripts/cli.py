@@ -38,8 +38,7 @@ from sklearn.model_selection import (
 )
 from sklearn.pipeline import make_pipeline
 
-from fame3r import FAME3RVectorizer
-from fame3r.score import FAME3RScoreEstimator
+from fame3r import FAME3RScoreEstimator, FAME3RVectorizer
 
 # Unfortunately, this monkey-patching is required to get CDPKit
 # objects like atoms and molecules into NumPy arrays...
@@ -460,7 +459,7 @@ def threshold(
         typer.Option(help="Number of cross-validation folds to perform."),
     ] = 10,
 ):
-    # # Required for passing KFold groups to cross-validation
+    # Required for passing KFold groups to cross-validation
     sklearn.set_config(enable_metadata_routing=True)
 
     som_atoms_labeled = read_labeled_atoms_from_sdf_file(input_path)
