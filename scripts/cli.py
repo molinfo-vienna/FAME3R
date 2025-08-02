@@ -81,7 +81,8 @@ def top2_rate_score(y_true, y_prob, groups):
     return top2_sucesses / len(unique_groups)
 
 
-console = Console()
+stdout = Console()
+stderr = Console(stderr=True)
 
 
 @contextmanager
@@ -91,13 +92,13 @@ def Spinner(*, title: str):
         TextColumn("[progress.description]{task.description}[/]"),
         TimeElapsedColumn(),
         transient=True,
-        console=console,
+        console=stderr,
     ) as progress:
         progress.add_task(description=title, total=None)
         yield
         time_elapsed = TimeElapsedColumn().render(progress.tasks[-1])
 
-    console.print(
+    stderr.print(
         f"[progress.spinner]⠿[/] {title} [progress.elapsed]{time_elapsed}[/]",
         highlight=False,
     )
@@ -356,7 +357,7 @@ def metrics(
         "top2_rate": top2_rate_score(y_true, y_prob, smiles),
     }
 
-    console.print(JSON.from_data(computed_metrics))
+    stderr.print(JSON.from_data(computed_metrics))
 
 
 @app.command(
@@ -422,7 +423,7 @@ def hyperparameters(
             verbose=3,
         ).fit(descriptors, labels, groups=containing_mol_ids)
 
-    console.print(JSON.from_data(grid_search.best_params_))
+    stdout.print(JSON.from_data(grid_search.best_params_))
 
 
 @app.command(
@@ -493,7 +494,7 @@ def threshold(
             random_state=42,
         ).fit(descriptors, labels, groups=containing_mol_ids)
 
-    console.print(JSON.from_data({"best_threshold": tuner.best_threshold_}))
+    stdout.print(JSON.from_data({"best_threshold": tuner.best_threshold_}))
 
 
 if __name__ == "__main__":
