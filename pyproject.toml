@@ -45,19 +45,10 @@ dev = [
 ]
 
 [project.scripts]
-fame3r = "scripts.cli:app"
+fame3r = "fame3r._cli:app"
 
-[tool.hatch.build.targets.sdist]
-include = [
-    "fame3r",
-    "scripts",
-]
-
-[tool.hatch.build.targets.wheel]
-include = [
-    "fame3r",
-    "scripts",
-]
+[tool.hatch.build]
+packages = ["src/fame3r"]
 
 [tool.pytest.ini_options]
 addopts = [
