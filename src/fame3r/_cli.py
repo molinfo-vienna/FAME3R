@@ -210,9 +210,6 @@ def train(
         )
 
 
-# TODO: maybe rename the classifier
-
-
 @app.command(
     name="infer",
     help="Predict SOMs using an existing FAME3R model.",
