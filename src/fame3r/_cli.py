@@ -47,7 +47,8 @@ del Atom.__getitem__
 
 def extract_som_labels(mol: MolecularGraph) -> list[tuple[Atom, bool]]:
     structure_data = {
-        entry.header[2:].split(">")[0]: entry.data for entry in getStructureData(mol)
+        entry.header.split("<")[1].split(">")[0]: entry.data
+        for entry in getStructureData(mol)
     }
     som_indices = literal_eval(structure_data["soms"])
 
