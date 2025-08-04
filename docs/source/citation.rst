@@ -1,5 +1,5 @@
 Citation
---------
+========
 
 If you use FAME3R in your research, please cite the following `paper <TODO>`_:
 

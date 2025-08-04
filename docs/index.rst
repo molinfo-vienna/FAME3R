@@ -13,9 +13,9 @@
    :caption: User Guides
    :maxdepth: 2
    :hidden:
+   :glob:
 
-   source/tutorials/scripts
-   source/tutorials/python_api
+   source/tutorials/*
 
 .. toctree::
    :caption: Documentation

@@ -1,5 +1,5 @@
 Installation
-------------
+============
 
 This package is distributed through the PyPi package index.
 As such, you can use PIP or any other compatible tool to install it.
