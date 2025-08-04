@@ -50,7 +50,9 @@ def extract_som_labels(mol: MolecularGraph) -> list[tuple[Atom, bool]]:
         entry.header.split("<")[1].split(">")[0]: entry.data
         for entry in getStructureData(mol)
     }
-    som_indices = literal_eval(structure_data["soms"])
+    som_indices = (
+        literal_eval(structure_data["soms"]) if "soms" in structure_data else []
+    )
 
     return [(atom, atom.index in som_indices) for atom in mol.getAtoms()]
 
