@@ -166,12 +166,12 @@ def train(
             json.loads(hyperparameter_path.read_text())
             if hyperparameter_path
             else {
-                "n_estimators": 100,
+                "n_estimators": 250,
                 "max_depth": None,
                 "min_samples_split": 2,
                 "min_samples_leaf": 1,
                 "max_features": "sqrt",
-                "class_weight": "balanced",
+                "class_weight": "balanced_subsample",
             }
         )
 
