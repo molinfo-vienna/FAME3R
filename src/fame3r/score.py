@@ -1,6 +1,5 @@
 import numpy as np
 from sklearn.base import BaseEstimator
-from sklearn.neighbors import BallTree
 from sklearn.utils._set_output import _SetOutputMixin
 from sklearn.utils.validation import check_is_fitted, validate_data
 
@@ -10,13 +9,12 @@ __all__ = ["FAME3RScoreEstimator"]
 class FAME3RScoreEstimator(BaseEstimator, _SetOutputMixin):
     """Computes the FAME score for a set of features.
 
-    The FAME score is defined as the mean Tanimoto similarity of the
-    feature vector to the ``n`` closest vectors in the training set.
+    The FAME score is defined as the mean Tanimoto similarity of the feature
+    vector to the ``n`` closest vectors in the training set.
 
-    It is originally only defined for binary feature vectors, but this
-    implementation can also be applied to any numeric features. This
-    is because we use an extended definition of Tanimoto similarity as
-    described in :func:`~sklearn.metrics.jaccard_score`.
+    It is intended for this estimator to only be used with binary feature
+    ("fingerprint") vectors, as Tanimoto similarity is not well-behaved on
+    arbitrary vectors.
 
     Parameters
     ----------
@@ -66,9 +64,7 @@ class FAME3RScoreEstimator(BaseEstimator, _SetOutputMixin):
             estimator=FAME3RScoreEstimator,
         )
 
-        # We use ball tree here because it supports the Jaccard
-        # metric, which is equivalent to the Tanimoto distance.
-        self.nearest_neighbors_ = BallTree(X, metric="jaccard")
+        self._reference_data = X
 
         return self
 
@@ -96,12 +92,9 @@ class FAME3RScoreEstimator(BaseEstimator, _SetOutputMixin):
             estimator=FAME3RScoreEstimator,
         )
 
-        distances, _ = self.nearest_neighbors_.query(
-            X, k=self.n_neighbors, return_distance=True
-        )
-        similarities = 1 - distances
+        similarity_matrix = _tanimoto_similarity_matrix(self._reference_data, X)
 
-        return np.mean(similarities, axis=1)
+        return np.mean(np.sort(similarity_matrix, axis=0)[-3:], axis=0)
 
     def get_feature_names_out(self, input_features=None):
         """Get output feature names for transformation.
@@ -117,3 +110,20 @@ class FAME3RScoreEstimator(BaseEstimator, _SetOutputMixin):
             Transformed feature names.
         """
         return ["FAME3RScore"]
+
+
+def _tanimoto_similarity_matrix(A, B):
+    A = np.asarray(A)
+    B = np.asarray(B)
+
+    intersection = np.matmul(A, B.T)
+    A_sqare_norm = np.sum(A**2, axis=1)
+    B_sqare_norm = np.sum(B**2, axis=1)
+    union = A_sqare_norm[:, None] + B_sqare_norm[None, :] - intersection
+
+    return np.divide(
+        intersection,
+        union,
+        out=np.zeros_like(intersection, dtype=np.float64),
+        where=union != 0,
+    )
