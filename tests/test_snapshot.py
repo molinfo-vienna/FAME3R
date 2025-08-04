@@ -46,7 +46,7 @@ def test_score(snapshot: SnapshotAssertion):
     test_inputs = [[smiles] for smiles in som_marked_smiles_test]
 
     pipeline = make_pipeline(
-        FAME3RVectorizer(),
+        FAME3RVectorizer(output=["fingerprint"]),
         FAME3RScoreEstimator(),
     ).fit(train_inputs)
 
