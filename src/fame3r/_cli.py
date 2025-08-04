@@ -314,8 +314,8 @@ def infer(
                     "atom_id": som_atoms[i][0].index,
                     "y_true": int(som_atoms[i][1]),
                     "y_pred": int(predictions_binary[i]),
-                    "y_prob": prediction_probabilities[i],
-                    "fame_score": fame_scores[i],
+                    "y_prob": np.round(prediction_probabilities[i], 2),
+                    "fame_score": np.round(fame_scores[i], 2),
                 }
             )
 
@@ -350,13 +350,13 @@ def metrics(
     y_prob = np.array([row["y_prob"] for row in rows], dtype=float)
 
     computed_metrics = {
-        "roc_auc": roc_auc_score(y_true, y_prob),
-        "average_precision": average_precision_score(y_true, y_prob),
-        "f1": f1_score(y_true, y_pred),
-        "matthews_corrcoef": matthews_corrcoef(y_true, y_pred),
-        "precision": precision_score(y_true, y_pred),
-        "recall": recall_score(y_true, y_pred),
-        "top2_rate": top2_rate_score(y_true, y_prob, smiles),
+        "roc_auc": np.round(roc_auc_score(y_true, y_prob), 4),
+        "average_precision": np.round(average_precision_score(y_true, y_prob), 4),
+        "f1": np.round(f1_score(y_true, y_pred), 4),
+        "matthews_corrcoef": np.round(matthews_corrcoef(y_true, y_pred), 4),
+        "precision": np.round(precision_score(y_true, y_pred), 4),
+        "recall": np.round(recall_score(y_true, y_pred), 4),
+        "top2_rate": np.round(top2_rate_score(y_true, y_prob, smiles), 4),
     }
 
     if output_path:
