@@ -19,6 +19,7 @@ dependencies = [
     "joblib==1.4.2",
     "numpy>=2.3.2",
     "scikit-learn>=1.5.1",
+    "typer>=0.16.0",
 ]
 
 [dependency-groups]
@@ -44,22 +45,10 @@ dev = [
 ]
 
 [project.scripts]
-fame3r-cv-hp-search = "scripts.cv_hp_search:main"
-fame3r-infer = "scripts.infer:main"
-fame3r-test = "scripts.test:main"
-fame3r-train = "scripts.train:main"
+fame3r = "fame3r._cli:app"
 
-[tool.hatch.build.targets.sdist]
-include = [
-    "fame3r",
-    "scripts",
-]
-
-[tool.hatch.build.targets.wheel]
-include = [
-    "fame3r",
-    "scripts",
-]
+[tool.hatch.build]
+packages = ["src/fame3r"]
 
 [tool.pytest.ini_options]
 addopts = [
