@@ -184,7 +184,7 @@ def train(
                 [label for _, label in som_atoms_labeled],
             )
 
-        models_path.mkdir(exist_ok=True)
+        models_path.mkdir(exist_ok=True, parents=True)
         joblib.dump(
             score_pipeline.named_steps["randomforestclassifier"],
             models_path / "random_forest_classifier.joblib",
@@ -202,7 +202,7 @@ def train(
                 [label for _, label in som_atoms_labeled],
             )
 
-        models_path.mkdir(exist_ok=True)
+        models_path.mkdir(exist_ok=True, parents=True)
         joblib.dump(
             score_pipeline.named_steps["fame3rscoreestimator"],
             models_path / "fame3r_score_estimator.joblib",
