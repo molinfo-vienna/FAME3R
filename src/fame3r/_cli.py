@@ -118,7 +118,7 @@ def train(
         typer.Option(
             "--input",
             "-i",
-            help="Path to SOM training data.",
+            help="Path to input SOM training data (SDF).",
         ),
     ],
     models_path: Annotated[
@@ -219,7 +219,7 @@ def infer(
         typer.Option(
             "--input",
             "-i",
-            help="Path to molecules for predicting SOM labels.",
+            help="Path to input data for which to predict SOMs (SDF).",
         ),
     ],
     models_path: Annotated[
