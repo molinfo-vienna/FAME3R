@@ -333,6 +333,14 @@ def metrics(
             help="Path to input prediction CSV file.",
         ),
     ],
+    output_path: Annotated[
+        Path | None,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Path to output metrics JSON file.",
+        ),
+    ] = None,
 ):
     rows = [row for row in csv.DictReader(input_path.open())]
 
@@ -351,7 +359,11 @@ def metrics(
         "top2_rate": top2_rate_score(y_true, y_prob, smiles),
     }
 
-    stderr.print(JSON.from_data(computed_metrics))
+    if output_path:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(json.dumps(computed_metrics, indent=4))
+    else:
+        stderr.print(JSON.from_data(computed_metrics))
 
 
 @app.command(
@@ -367,6 +379,14 @@ def hyperparameters(
             help="Path to SOM training/cross-validation data.",
         ),
     ],
+    output_path: Annotated[
+        Path | None,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Path to output hyperparameter JSON file.",
+        ),
+    ] = None,
     radius: Annotated[
         int,
         typer.Option(
@@ -419,7 +439,11 @@ def hyperparameters(
             verbose=3,
         ).fit(descriptors, labels, groups=containing_mol_ids)
 
-    stdout.print(JSON.from_data(grid_search.best_params_))
+    if output_path:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(json.dumps(grid_search.best_params_, indent=4))
+    else:
+        stdout.print(JSON.from_data(grid_search.best_params_))
 
 
 @app.command(
@@ -443,6 +467,14 @@ def threshold(
             help="Path to existing FAME3R classifier model file.",
         ),
     ],
+    output_path: Annotated[
+        Path | None,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Path to output threshold JSON file.",
+        ),
+    ] = None,
     radius: Annotated[
         int,
         typer.Option(
@@ -492,7 +524,11 @@ def threshold(
             random_state=42,
         ).fit(descriptors, labels, groups=containing_mol_ids)
 
-    stdout.print(JSON.from_data({"best_threshold": tuner.best_threshold_}))
+    if output_path:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(json.dumps(tuner.best_threshold_, indent=4))
+    else:
+        stdout.print(JSON.from_data({"best_threshold": tuner.best_threshold_}))
 
 
 @app.command(
