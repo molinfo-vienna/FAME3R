@@ -55,7 +55,7 @@ def extract_som_labels(mol: MolecularGraph) -> list[tuple[Atom, bool]]:
     return [(atom, atom.index in som_indices) for atom in mol.getAtoms()]
 
 
-def read_labeled_atoms_from_sdf_file(path: PathLike) -> list[Atom]:
+def read_labeled_atoms_from_sdf(path: PathLike) -> list[Atom]:
     results = []
 
     reader = FileSDFMoleculeReader(str(path))
@@ -154,7 +154,7 @@ def train(
         int, typer.Option(help="Number of neighbors for FAME score estimator.")
     ] = 3,
 ):
-    som_atoms_labeled = read_labeled_atoms_from_sdf_file(input_path)
+    som_atoms_labeled = read_labeled_atoms_from_sdf(input_path)
 
     atom_count = len(som_atoms_labeled)
     mol_count = len({atom.molecule.getObjectID() for atom, _ in som_atoms_labeled})
@@ -259,7 +259,7 @@ def infer(
         ),
     ] = False,
 ):
-    som_atoms = read_labeled_atoms_from_sdf_file(input_path)
+    som_atoms = read_labeled_atoms_from_sdf(input_path)
 
     atom_count = len(som_atoms)
     mol_count = len({atom.molecule.getObjectID() for atom, _ in som_atoms})
@@ -385,7 +385,7 @@ def hyperparameters(
     # Required for passing KFold groups to cross-validation
     sklearn.set_config(enable_metadata_routing=True)
 
-    som_atoms_labeled = read_labeled_atoms_from_sdf_file(input_path)
+    som_atoms_labeled = read_labeled_atoms_from_sdf(input_path)
 
     labels = [label for _, label in som_atoms_labeled]
     containing_mol_ids = [atom.molecule.getObjectID() for atom, _ in som_atoms_labeled]
@@ -461,7 +461,7 @@ def threshold(
     # Required for passing KFold groups to cross-validation
     sklearn.set_config(enable_metadata_routing=True)
 
-    som_atoms_labeled = read_labeled_atoms_from_sdf_file(input_path)
+    som_atoms_labeled = read_labeled_atoms_from_sdf(input_path)
 
     labels = [label for _, label in som_atoms_labeled]
     containing_mol_ids = [atom.molecule.getObjectID() for atom, _ in som_atoms_labeled]
@@ -531,7 +531,7 @@ def descriptors(
         ),
     ] = ["fingerprint", "physicochemical", "topological"],
 ):
-    som_atoms = read_labeled_atoms_from_sdf_file(input_path)
+    som_atoms = read_labeled_atoms_from_sdf(input_path)
     containing_mol_ids = [atom.molecule.getObjectID() for atom, _ in som_atoms]
 
     atom_count = len(som_atoms)
