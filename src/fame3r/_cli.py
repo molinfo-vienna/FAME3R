@@ -151,10 +151,6 @@ def train(
             help="Path to JSON file containing model hyperparameters.",
         ),
     ] = None,
-    # n_neighbors: Annotated[
-    #     int,
-    #     typer.Option(help="Number of neighbors for FAME score estimator.")
-    # ] = 3,
 ):
     som_atoms_labeled = read_labeled_atoms_from_sdf_file(input_path)
 
