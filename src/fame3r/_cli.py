@@ -142,7 +142,7 @@ def train(
             "--kind",
             help="Models kinds to train.",
         ),
-    ] = ["random-forest", "fame-score"],
+    ] = ["random-forest", "fame-scorer"],
     hyperparameter_path: Annotated[
         Path | None,
         typer.Option(
@@ -190,7 +190,7 @@ def train(
             models_path / "random_forest_classifier.joblib",
         )
 
-    if "fame-score" in model_kinds:
+    if "fame-scorer" in model_kinds:
         with Spinner(
             title=f"Training FAME score estimator on {atom_count} atoms ({mol_count} molecules)"
         ):
