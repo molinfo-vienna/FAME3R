@@ -133,7 +133,6 @@ def train(
         int,
         typer.Option(
             "--radius",
-            "-r",
             help="Atom environment radius in bonds.",
         ),
     ] = 5,
@@ -243,7 +242,6 @@ def infer(
         int,
         typer.Option(
             "--radius",
-            "-r",
             help="Atom environment radius in bonds.",
         ),
     ] = 5,
@@ -251,7 +249,6 @@ def infer(
         float,
         typer.Option(
             "--threshold",
-            "-t",
             help="Prediction probability threshold",
         ),
     ] = 0.3,
@@ -374,13 +371,15 @@ def hyperparameters(
         int,
         typer.Option(
             "--radius",
-            "-r",
             help="Atom environment radius in bonds.",
         ),
     ] = 5,
     num_folds: Annotated[
         int,
-        typer.Option(help="Number of cross-validation folds to perform."),
+        typer.Option(
+            "--num-folds",
+            help="Number of cross-validation folds to perform.",
+        ),
     ] = 10,
 ):
     # Required for passing KFold groups to cross-validation
@@ -448,13 +447,15 @@ def threshold(
         int,
         typer.Option(
             "--radius",
-            "-r",
             help="Atom environment radius in bonds.",
         ),
     ] = 5,
     num_folds: Annotated[
         int,
-        typer.Option(help="Number of cross-validation folds to perform."),
+        typer.Option(
+            "--num-folds",
+            help="Number of cross-validation folds to perform.",
+        ),
     ] = 10,
 ):
     # Required for passing KFold groups to cross-validation
@@ -519,13 +520,15 @@ def descriptors(
         int,
         typer.Option(
             "--radius",
-            "-r",
             help="Atom environment radius in bonds.",
         ),
     ] = 5,
     included_descriptors: Annotated[
         list[str],
-        typer.Option("--subset", help="Subsets of FAME3R descriptors to generate."),
+        typer.Option(
+            "--subset",
+            help="Subsets of FAME3R descriptors to generate.",
+        ),
     ] = ["fingerprint", "physicochemical", "topological"],
 ):
     som_atoms = read_labeled_atoms_from_sdf_file(input_path)
