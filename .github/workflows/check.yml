@@ -15,7 +15,7 @@ jobs:
     - uses: astral-sh/setup-uv@v6
       with:
         enable-cache: true
-    - run: uv sync
+    - run: uv sync --all-extras
     - run: uv run ruff check .
 
   format:
@@ -26,7 +26,7 @@ jobs:
     - uses: astral-sh/setup-uv@v6
       with:
         enable-cache: true
-    - run: uv sync
+    - run: uv sync --all-extras
     - run: uv run ruff format . --diff
 
   types:
@@ -37,5 +37,5 @@ jobs:
     - uses: astral-sh/setup-uv@v6
       with:
         enable-cache: true
-    - run: uv sync
+    - run: uv sync --all-extras
     - run: uv run basedpyright .

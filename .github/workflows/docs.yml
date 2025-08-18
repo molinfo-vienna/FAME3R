@@ -22,7 +22,7 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
            enable-cache: true
-      - run: uv sync
+      - run: uv sync --all-extras
       - uses: actions/configure-pages@v5
       - name: Generate Sphinx documentation
         run: |
