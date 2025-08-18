@@ -1,0 +1,63 @@
+module:
+  rank: 3
+  name: fame3r
+  visible_name: FAME3R
+  visible: False
+  logo: !image logo.svg
+  logo_title: Sites of Metabolism
+  logo_caption: Regioselectivity prediction for phase 1 and phase 2 metabolism
+  example_smiles: CN1CCN(Cc2ccc(cc2)C(=O)Nc3ccc(C)c(Nc4nccc(n4)c5cccnc5)c3)CC1 (imatinib)
+  batch_size: 10
+
+  title: Prediction of Phase 1 and Phase 2 Sites of Metabolism (SoMs)
+  description: |
+    TODO
+
+  partners:
+    - name: University of Vienna
+      logo: !image logo_vienna.gif
+      url: https://www.univie.ac.at/en
+
+  publications:
+
+  about: |
+    TODO
+
+  result_properties:
+    - name: prediction
+      visible_name: Probability
+      type: float
+      sortable: True
+      level: atom
+      format: .2f
+      color_palette:
+        type: sequential
+        domain:
+          - 0
+          - 1
+        range:
+          - neutral
+          - positive
+    - name: prediction_binary
+      visible_name: SOM
+      type: bool
+      sortable: True
+      level: atom
+      color_palette:
+        range:
+          - negative
+          - positive
+    # - name: fame_score
+    #   visible_name: Fame score
+    #   type: float
+    #   sortable: True
+    #   level: atom
+    #   format: .2f
+    #   color_palette:
+    #     type: sequential
+    #     domain:
+    #       - 0
+    #       - 1
+    #     range:
+    #       - neutral
+    #       - positive

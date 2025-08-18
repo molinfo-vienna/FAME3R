@@ -25,6 +25,10 @@ dependencies = [
 cli = [
     "typer>=0.16.0",
 ]
+nerdd = [
+    "nerdd-link>=0.5.0",
+    "nerdd-module>=0.3.41",
+]
 
 [dependency-groups]
 build = ["build"]
