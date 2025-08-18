@@ -19,6 +19,10 @@ dependencies = [
     "joblib==1.4.2",
     "numpy>=2.3.2",
     "scikit-learn>=1.5.1",
+]
+
+[project.optional-dependencies]
+cli = [
     "typer>=0.16.0",
 ]
 
