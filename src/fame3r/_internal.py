@@ -14,15 +14,15 @@ SYBYL_ATOM_TYPE_IDX_CDPKIT = [
     8,  ## N.1   - sp nitrogen
     9,  ## N.ar  - aromatic nitrogen
     10,  # N.am  - amide nitrogen
-    11,  # N.pl3 - trigonal nitrogen
+    11,  # N.p13 - trigonal nitrogen
     12,  # N.4   - quaternary nitrogen
     13,  # O.3   - sp3 oxygen
     14,  # O.2   - sp2 oxygen
     15,  # O.co2 - carboxylic oxygen
     18,  # S.3   - sp3 sulfur
     19,  # S.2   - sp2 sulfur
-    20,  # S.0   - sulfoxide sulfur
-    21,  # S.O2  - sulfone sulfur
+    20,  # S.o   - sulfoxide sulfur
+    21,  # S.o2  - sulfone sulfur
     22,  # P.3   - sp3 phosphorus
     23,  # F     - fluorine
     24,  # H     - hydrogen
