@@ -213,10 +213,10 @@ def train(
 
 
 @app.command(
-    name="infer",
+    name="predict",
     help="Predict SOMs using an existing FAME3R model.",
 )
-def infer(
+def predict(
     input_path: Annotated[
         Path,
         typer.Option(
