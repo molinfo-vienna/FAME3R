@@ -1,6 +1,7 @@
 import csv
 import json
 from ast import literal_eval
+from collections import Counter
 from contextlib import contextmanager
 from os import PathLike
 from pathlib import Path
@@ -343,22 +344,72 @@ def metrics(
             help="Path to output metrics JSON file.",
         ),
     ] = None,
+    n_bootstrap_samples: Annotated[
+        int | None,
+        typer.Option(
+            "--bootstrap",
+            help="Number of bootstrapping samples to perform.",
+        ),
+    ] = None,
 ):
     rows = [row for row in csv.DictReader(input_path.open())]
 
-    smiles = np.array([row["smiles"] for row in rows], dtype=str)
-    y_true = np.array([int(row["y_true"]) for row in rows], dtype=bool)
-    y_pred = np.array([int(row["y_pred"]) for row in rows], dtype=bool)
-    y_prob = np.array([row["y_prob"] for row in rows], dtype=float)
+    smiles_full = np.array([row["smiles"] for row in rows], dtype=str)
+    y_true_full = np.array([int(row["y_true"]) for row in rows], dtype=bool)
+    y_pred_full = np.array([int(row["y_pred"]) for row in rows], dtype=bool)
+    y_prob_full = np.array([row["y_prob"] for row in rows], dtype=float)
+
+    computed_metrics_samples = []
+    unique_smiles = np.unique(smiles_full)
+    rng = np.random.default_rng(0)
+
+    if n_bootstrap_samples:
+        with Spinner(title=f"Performing {n_bootstrap_samples} bootstraps"):
+            for _ in range(n_bootstrap_samples):
+                counter = Counter(
+                    rng.choice(unique_smiles, size=len(unique_smiles), replace=True)
+                )
+                repeats = [counter[it] for it in smiles_full]
+
+                smiles = np.repeat(smiles_full, repeats)
+                y_true = np.repeat(y_true_full, repeats)
+                y_pred = np.repeat(y_pred_full, repeats)
+                y_prob = np.repeat(y_prob_full, repeats)
+
+                computed_metrics_samples.append(
+                    {
+                        "roc_auc": roc_auc_score(y_true, y_prob),
+                        "average_precision": average_precision_score(y_true, y_prob),
+                        "f1": f1_score(y_true, y_pred),
+                        "matthews_corrcoef": matthews_corrcoef(y_true, y_pred),
+                        "precision": precision_score(y_true, y_pred),
+                        "recall": recall_score(y_true, y_pred),
+                        "top2_rate": top2_rate_score(y_true, y_prob, smiles),
+                    }
+                )
+    else:
+        computed_metrics_samples.append(
+            {
+                "roc_auc": roc_auc_score(y_true_full, y_prob_full),
+                "average_precision": average_precision_score(y_true_full, y_prob_full),
+                "f1": f1_score(y_true_full, y_pred_full),
+                "matthews_corrcoef": matthews_corrcoef(y_true_full, y_pred_full),
+                "precision": precision_score(y_true_full, y_pred_full),
+                "recall": recall_score(y_true_full, y_pred_full),
+                "top2_rate": top2_rate_score(y_true_full, y_prob_full, smiles_full),
+            }
+        )
 
     computed_metrics = {
-        "roc_auc": np.round(roc_auc_score(y_true, y_prob), 4),
-        "average_precision": np.round(average_precision_score(y_true, y_prob), 4),
-        "f1": np.round(f1_score(y_true, y_pred), 4),
-        "matthews_corrcoef": np.round(matthews_corrcoef(y_true, y_pred), 4),
-        "precision": np.round(precision_score(y_true, y_pred), 4),
-        "recall": np.round(recall_score(y_true, y_pred), 4),
-        "top2_rate": np.round(top2_rate_score(y_true, y_prob, smiles), 4),
+        key: {
+            "mean": np.round(
+                np.mean([sample[key] for sample in computed_metrics_samples]), 4
+            ),
+            "std": np.round(
+                np.std([sample[key] for sample in computed_metrics_samples]), 4
+            ),
+        }
+        for key in computed_metrics_samples[0].keys()
     }
 
     if output_path:
