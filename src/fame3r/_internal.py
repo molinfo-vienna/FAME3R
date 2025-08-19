@@ -65,7 +65,7 @@ def generate_fingerprints(
     Chem.getEnvironment(ctr_atom, molgraph, radius, env)
 
     # Count atoms of each type at each distance
-    atom_counts = np.zeros((len(SYBYL_ATOM_TYPE_IDX_CDPKIT), radius + 1), dtype=int)
+    atom_counts = np.zeros((radius + 1, len(SYBYL_ATOM_TYPE_IDX_CDPKIT)), dtype=int)
 
     for atom in env.atoms:
         sybyl_type = Chem.getSybylType(atom)
@@ -74,7 +74,7 @@ def generate_fingerprints(
 
         sybyl_type_index = SYBYL_ATOM_TYPE_IDX_CDPKIT.index(sybyl_type)
         radius = Chem.getTopologicalDistance(ctr_atom, atom, molgraph)
-        atom_counts[sybyl_type_index, radius] += 1
+        atom_counts[radius, sybyl_type_index] += 1
 
     if use_counts:
         return atom_counts.ravel()
@@ -87,7 +87,7 @@ def generate_fingerprints(
     for radius in range(radius + 1):  # Radius (R0, R1, ..., R5)
         for sybyl_type_index in range(len(SYBYL_ATOM_TYPE_IDX_CDPKIT)):  # Atom type
             for bit in range(32):  # Bit position (B0, B1, ..., B31)
-                count = atom_counts[sybyl_type_index, radius]
+                count = atom_counts[radius, sybyl_type_index]
                 # Set bit to 1 if count > bit position
                 if count > bit:
                     fingerprints[fingerprint_index] = 1
