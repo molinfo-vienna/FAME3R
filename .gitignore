@@ -1,9 +1,8 @@
-data/
-dist/
-output/
-.vscode/
-*.sh
-*.ipynb
-**/__pycache__/
-.mypy_cache/
-.pytest_cache/
+/data
+/dist
+/models
+
+__pycache__
+
+.ipynb_checkpoints
+.vscode
