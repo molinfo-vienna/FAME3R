@@ -257,7 +257,7 @@ def infer(
     compute_fame_score: Annotated[
         bool,
         typer.Option(
-            "--compute-fame-score", help="Also compute FAME score for applicability."
+            "--fame-score", help="Also compute FAME score for applicability."
         ),
     ] = False,
 ):
