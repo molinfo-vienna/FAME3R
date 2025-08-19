@@ -57,7 +57,9 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
         *,
         radius: int = 5,
         input: Literal["smiles", "cdpkit"] = "smiles",
-        output: list[Literal["fingerprint", "counts", "physicochemical", "topological"]] = [
+        output: list[
+            Literal["fingerprint", "counts", "physicochemical", "topological"]
+        ] = [
             "fingerprint",
             "physicochemical",
             "topological",

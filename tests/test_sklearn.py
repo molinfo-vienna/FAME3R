@@ -1,6 +1,6 @@
 from sklearn.utils.estimator_checks import check_estimator
 
-from fame3r.score import FAME3RScoreEstimator
+from fame3r import FAME3RScoreEstimator
 
 
 def test_check_estimator():
