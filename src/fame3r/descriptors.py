@@ -35,10 +35,15 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
         specifying the atom used to generate descriptors, or "cdpkit" to accept
         CDPKit Atom objects.
 
-    output : list of {"fingerprint", "physicochemical", "topological"}
+    output : list of {"fingerprint", "counts", "physicochemical", "topological"}
 
         Which molecular descriptors to generate, and in which order. Defaults to
-        generating all supported descriptors.
+        generating the "fingerprint", "physicochemical" and "topological"
+        descriptors, in that order.
+
+        The "counts" descriptors are an alternative to of the "fingerprints"
+        descriptors which use integers for representing counts instead of the
+        32-bit encoding used in the original version of the FAME3 software.
 
     Examples
     --------
@@ -52,7 +57,7 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
         *,
         radius: int = 5,
         input: Literal["smiles", "cdpkit"] = "smiles",
-        output: list[Literal["fingerprint", "physicochemical", "topological"]] = [
+        output: list[Literal["fingerprint", "counts", "physicochemical", "topological"]] = [
             "fingerprint",
             "physicochemical",
             "topological",
@@ -84,6 +89,10 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
         for subset in self.output:
             if subset == "fingerprint":
                 self.feature_names_.extend(generate_fingerprint_names(self.radius))
+            if subset == "counts":
+                self.feature_names_.extend(
+                    generate_fingerprint_names(self.radius, use_counts=True)
+                )
             elif subset == "physicochemical":
                 self.feature_names_.extend(PHYSICOCHEMICAL_DESCRIPTOR_NAMES)
             elif subset == "topological":
@@ -174,6 +183,15 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
                 descriptors.append(
                     generate_fingerprints(
                         som_atoms[0], som_atoms[0].molecule, radius=self.radius
+                    )
+                )
+            if subset == "counts":
+                descriptors.append(
+                    generate_fingerprints(
+                        som_atoms[0],
+                        som_atoms[0].molecule,
+                        radius=self.radius,
+                        use_counts=True,
                     )
                 )
             elif subset == "physicochemical":

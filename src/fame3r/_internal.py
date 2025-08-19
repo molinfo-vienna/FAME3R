@@ -34,14 +34,19 @@ SYBYL_ATOM_TYPE_IDX_CDPKIT = [
 ]
 
 
-def generate_fingerprint_names(radius: int) -> list[str]:
+def generate_fingerprint_names(radius: int, use_counts: bool = False) -> list[str]:
     descriptor_names = []
     for radius in range(radius + 1):
         for atom_type in SYBYL_ATOM_TYPE_IDX_CDPKIT:
-            for bit in range(32):
+            if use_counts:
                 descriptor_names.append(
-                    f"R{radius}_AtomType_{Chem.getSybylAtomTypeString(atom_type)}_B{bit}"
+                    f"R{radius}_AtomType_{Chem.getSybylAtomTypeString(atom_type)}"
                 )
+            else:
+                for bit in range(32):
+                    descriptor_names.append(
+                        f"R{radius}_AtomType_{Chem.getSybylAtomTypeString(atom_type)}_B{bit}"
+                    )
 
     return descriptor_names
 
@@ -50,6 +55,7 @@ def generate_fingerprints(
     ctr_atom: Chem.Atom,
     molgraph: Chem.MolecularGraph,
     radius: int,
+    use_counts: bool = False,
 ) -> npt.NDArray[np.bool_]:
     # Calculate total descriptor size
     fingerprints_size = (radius + 1) * len(SYBYL_ATOM_TYPE_IDX_CDPKIT) * 32
@@ -57,9 +63,6 @@ def generate_fingerprints(
     # Get the chemical environment around the center atom
     env = Chem.Fragment()
     Chem.getEnvironment(ctr_atom, molgraph, radius, env)
-
-    # Initialize circular fingerprints
-    fingerprints = np.zeros(fingerprints_size, dtype=bool)
 
     # Count atoms of each type at each distance
     atom_counts = np.zeros((len(SYBYL_ATOM_TYPE_IDX_CDPKIT), radius + 1), dtype=int)
@@ -72,6 +75,12 @@ def generate_fingerprints(
         sybyl_type_index = SYBYL_ATOM_TYPE_IDX_CDPKIT.index(sybyl_type)
         radius = Chem.getTopologicalDistance(ctr_atom, atom, molgraph)
         atom_counts[sybyl_type_index, radius] += 1
+
+    if use_counts:
+        return atom_counts.ravel()
+
+    # Initialize circular fingerprints
+    fingerprints = np.zeros(fingerprints_size, dtype=bool)
 
     # Generate 32-bit fingerprints for each combination of atom type and distance
     fingerprint_index = 0
