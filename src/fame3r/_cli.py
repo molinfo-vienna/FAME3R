@@ -588,7 +588,11 @@ def descriptors(
             [[som_atom] for som_atom, _ in som_atoms]
         )
 
-    with output_path.open("w", encoding="UTF-8", newline="") as f:
+    output_path.parent.mkdir(exist_ok=True, parents=True)
+    with (
+        Spinner(title=f"Writing descriptors for {atom_count} atoms to output file"),
+        output_path.open("w", encoding="UTF-8", newline="") as f,
+    ):
         writer = csv.writer(f)
         writer.writerow(["smiles", "atom_id"] + vectorizer.get_feature_names_out())
 
