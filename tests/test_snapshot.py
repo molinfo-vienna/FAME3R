@@ -27,16 +27,30 @@ def full_numpy_output():
         yield
 
 
-def test_descriptors(snapshot: SnapshotAssertion):
+DESCRIPTOR_COMBINATIONS = [
+    ["fingerprint"],
+    ["counts"],
+    ["physicochemical"],
+    ["topological"],
+    ["fingerprint", "physicochemical", "topological"],
+    ["counts", "physicochemical", "topological"],
+]
+
+
+@pytest.mark.parametrize("radius", [0, 3, 5])
+@pytest.mark.parametrize("descriptors", DESCRIPTOR_COMBINATIONS)
+def test_descriptors(snapshot: SnapshotAssertion, radius, descriptors):
     inputs = [[smiles] for smiles in som_marked_smiles_test]
 
-    vectorizer = FAME3RVectorizer().fit()
+    vectorizer = FAME3RVectorizer(radius=radius, output=descriptors).fit()
 
     assert snapshot == vectorizer.transform(inputs)
 
 
-def test_descriptor_names(snapshot: SnapshotAssertion):
-    vectorizer = FAME3RVectorizer().fit()
+@pytest.mark.parametrize("radius", [0, 3, 5])
+@pytest.mark.parametrize("descriptors", DESCRIPTOR_COMBINATIONS)
+def test_descriptor_names(snapshot: SnapshotAssertion, radius, descriptors):
+    vectorizer = FAME3RVectorizer(radius=radius, output=descriptors).fit()
 
     assert snapshot == vectorizer.get_feature_names_out()
 
