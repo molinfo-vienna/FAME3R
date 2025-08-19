@@ -235,7 +235,7 @@ def _extract_marked_atoms(smiles: str) -> list[Atom]:
 
     som_atoms_unordered: dict[int, Atom] = {
         atom.getProperty(AtomProperty.ATOM_MAPPING_ID): atom
-        for atom in marked_mol.getAtoms()
+        for atom in marked_mol.atoms
         if atom.getProperty(AtomProperty.ATOM_MAPPING_ID)
     }
 
