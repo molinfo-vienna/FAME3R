@@ -281,13 +281,15 @@ def predict(
         )[:, 1]
         predictions_binary = prediction_probabilities > threshold
 
-    score_estimator = joblib.load(models_path / "fame3r_score_estimator.joblib")
-    score_pipeline = make_pipeline(
-        FAME3RVectorizer(radius=radius, input="cdpkit", output=["fingerprint"]).fit(),
-        score_estimator,
-    )
-
     if compute_fame_score:
+        score_estimator = joblib.load(models_path / "fame3r_score_estimator.joblib")
+        score_pipeline = make_pipeline(
+            FAME3RVectorizer(
+                radius=radius, input="cdpkit", output=["fingerprint"]
+            ).fit(),
+            score_estimator,
+        )
+
         with Spinner(
             title=f"Predicting FAME scores for {atom_count} atoms ({mol_count} molecules)"
         ):
