@@ -18,7 +18,7 @@ module:
       logo: !image logo_vienna.gif
       url: https://www.univie.ac.at/en
 
-  publications:
+  publications: []
 
   about: |
     TODO
