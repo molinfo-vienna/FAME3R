@@ -27,7 +27,7 @@ cli = [
 ]
 nerdd = [
     "nerdd-link>=0.5.0",
-    "nerdd-module>=0.3.41",
+    "nerdd-module>=0.3.42",
 ]
 
 [dependency-groups]

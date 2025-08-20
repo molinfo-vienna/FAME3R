@@ -540,7 +540,7 @@ requires-dist = [
     { name = "cdpkit", specifier = "==1.2.3" },
     { name = "joblib", specifier = "==1.4.2" },
     { name = "nerdd-link", marker = "extra == 'nerdd'", specifier = ">=0.5.0" },
-    { name = "nerdd-module", marker = "extra == 'nerdd'", specifier = ">=0.3.41" },
+    { name = "nerdd-module", marker = "extra == 'nerdd'", specifier = ">=0.3.42" },
     { name = "numpy", specifier = ">=2.3.2" },
     { name = "scikit-learn", specifier = ">=1.5.1" },
     { name = "typer", marker = "extra == 'cli'", specifier = ">=0.16.0" },
@@ -1354,7 +1354,7 @@ wheels = [
 
 [[package]]
 name = "nerdd-module"
-version = "0.3.41"
+version = "0.3.42"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "decorator" },
@@ -1366,9 +1366,9 @@ dependencies = [
     { name = "rich-click" },
     { name = "stringcase" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f2/dd/6451ef23ab713fb5be330631cd8c62f64c10d1793dbfcca7e58bb6046f01/nerdd_module-0.3.41.tar.gz", hash = "sha256:b0b709d485a171d5d14a71e128dfe96c3acd06910f834d37d12a54512356f5c2", size = 37720, upload-time = "2025-08-14T02:21:09.35Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/45/d1/b7f1df17d5443fa30db29e91049c55adc4af271fc47b7c0160e459606b4e/nerdd_module-0.3.42.tar.gz", hash = "sha256:f2f6df83c9c12b2a941222abb2abb006b2975cdd4e7123fb1b38a0ad2d229d23", size = 37774, upload-time = "2025-08-20T08:42:37.779Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/96/3b/fceb6e908a13d126e53bbe1ddb9ec85abd2791091ef3f7db3fc72efa1f3f/nerdd_module-0.3.41-py3-none-any.whl", hash = "sha256:eda63af686f2d052f0738a3d830a7870088e86e46adb7ed01130a61f5d262a18", size = 62990, upload-time = "2025-08-14T02:21:07.755Z" },
+    { url = "https://files.pythonhosted.org/packages/7c/5b/3dc694d318e04930dccac16e9f47fb0905b319fe83bf2cd122c50f5ca015/nerdd_module-0.3.42-py3-none-any.whl", hash = "sha256:1715b765be2e32aa7df7475240cc8aed9a507568923403739c779f2675e6b850", size = 63233, upload-time = "2025-08-20T08:42:36.556Z" },
 ]
 
 [[package]]
