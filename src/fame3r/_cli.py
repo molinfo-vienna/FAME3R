@@ -121,7 +121,7 @@ def train(
         typer.Option(
             "--input",
             "-i",
-            help="Path to input SOM training data (SDF).",
+            help="Path to input training data (SDF).",
         ),
     ],
     models_path: Annotated[
@@ -143,7 +143,7 @@ def train(
         list[str],
         typer.Option(
             "--kind",
-            help="Models kinds to train.",
+            help="Models to train.",
         ),
     ] = ["random-forest", "fame-scorer"],
     hyperparameter_path: Annotated[
@@ -157,10 +157,10 @@ def train(
         int, typer.Option(help="Number of neighbors for FAME score estimator.")
     ] = 3,
 ):
-    som_atoms_labeled = read_labeled_atoms_from_sdf(input_path)
+    atoms = read_labeled_atoms_from_sdf(input_path)
 
-    atom_count = len(som_atoms_labeled)
-    mol_count = len({atom.molecule.getObjectID() for atom, _ in som_atoms_labeled})
+    atom_count = len(atoms)
+    mol_count = len({atom.molecule.getObjectID() for atom, _ in atoms})
 
     if "random-forest" in model_kinds:
         hyperparameters = (
@@ -183,8 +183,8 @@ def train(
                 FAME3RVectorizer(radius=radius, input="cdpkit"),
                 RandomForestClassifier(random_state=42, **hyperparameters),
             ).fit(
-                [[som_atom] for som_atom, _ in som_atoms_labeled],
-                [label for _, label in som_atoms_labeled],
+                [[atom] for atom, _ in atoms],
+                [label for _, label in atoms],
             )
 
         models_path.mkdir(exist_ok=True, parents=True)
@@ -201,8 +201,8 @@ def train(
                 FAME3RVectorizer(radius=radius, input="cdpkit", output=["fingerprint"]),
                 FAME3RScoreEstimator(n_neighbors=n_neighbors),
             ).fit(
-                [[som_atom] for som_atom, _ in som_atoms_labeled],
-                [label for _, label in som_atoms_labeled],
+                [[atom] for atom, _ in atoms],
+                [label for _, label in atoms],
             )
 
         models_path.mkdir(exist_ok=True, parents=True)
@@ -259,14 +259,14 @@ def predict(
         bool,
         typer.Option(
             "--fame-score",
-            help="Also compute FAME score for applicability.",
+            help="Also compute FAME score.",
         ),
     ] = False,
 ):
-    som_atoms = read_labeled_atoms_from_sdf(input_path)
+    atoms = read_labeled_atoms_from_sdf(input_path)
 
-    atom_count = len(som_atoms)
-    mol_count = len({atom.molecule.getObjectID() for atom, _ in som_atoms})
+    atom_count = len(atoms)
+    mol_count = len({atom.molecule.getObjectID() for atom, _ in atoms})
 
     classifier = joblib.load(models_path / "random_forest_classifier.joblib")
     clf_pipeline = make_pipeline(
@@ -277,7 +277,7 @@ def predict(
         title=f"Predicting SOM probabilities for {atom_count} atoms ({mol_count} molecules)"
     ):
         prediction_probabilities = clf_pipeline.predict_proba(
-            [[som_atom] for som_atom, _ in som_atoms]
+            [[atom] for atom, _ in atoms]
         )[:, 1]
         predictions_binary = prediction_probabilities > threshold
 
@@ -294,7 +294,7 @@ def predict(
             title=f"Predicting FAME scores for {atom_count} atoms ({mol_count} molecules)"
         ):
             fame_scores = score_pipeline.predict(
-                [[som_atom] for som_atom, _ in som_atoms]
+                [[atom] for atom, _ in atoms]
             )
     else:
         fame_scores = np.full_like(prediction_probabilities, np.nan)
@@ -313,12 +313,12 @@ def predict(
         )
         writer.writeheader()
 
-        for i in range(len(som_atoms)):
+        for i in range(len(atoms)):
             writer.writerow(
                 {
-                    "smiles": generateSMILES(som_atoms[i][0].molecule),
-                    "atom_id": som_atoms[i][0].index,
-                    "y_true": int(som_atoms[i][1]),
+                    "smiles": generateSMILES(atoms[i][0].molecule),
+                    "atom_id": atoms[i][0].index,
+                    "y_true": int(atoms[i][1]),
                     "y_pred": int(predictions_binary[i]),
                     "y_prob": np.round(prediction_probabilities[i], 2),
                     "fame_score": np.round(fame_scores[i], 2),
@@ -432,7 +432,7 @@ def hyperparameters(
         typer.Option(
             "--input",
             "-i",
-            help="Path to SOM training/cross-validation data.",
+            help="Path to input training data (SDF).",
         ),
     ],
     output_path: Annotated[
@@ -461,19 +461,19 @@ def hyperparameters(
     # Required for passing KFold groups to cross-validation
     sklearn.set_config(enable_metadata_routing=True)
 
-    som_atoms_labeled = read_labeled_atoms_from_sdf(input_path)
+    atoms = read_labeled_atoms_from_sdf(input_path)
 
-    labels = [label for _, label in som_atoms_labeled]
-    containing_mol_ids = [atom.molecule.getObjectID() for atom, _ in som_atoms_labeled]
+    labels = [label for _, label in atoms]
+    containing_mol_ids = [atom.molecule.getObjectID() for atom, _ in atoms]
 
-    atom_count = len(som_atoms_labeled)
+    atom_count = len(atoms)
     mol_count = len(set(containing_mol_ids))
 
     with Spinner(
         title=f"Computing descriptors for {atom_count} atoms ({mol_count} molecules)"
     ):
         descriptors = FAME3RVectorizer(radius=radius, input="cdpkit").fit_transform(
-            [[som_atom] for som_atom, _ in som_atoms_labeled]
+            [[atom] for atom, _ in atoms]
         )
 
     k_fold = GroupKFold(n_splits=num_folds, random_state=42, shuffle=True)
@@ -511,7 +511,7 @@ def threshold(
         typer.Option(
             "--input",
             "-i",
-            help="Path to SOM testing/cross-validation data.",
+            help="Path to input training data (SDF).",
         ),
     ],
     model_path: Annotated[
@@ -548,19 +548,19 @@ def threshold(
     # Required for passing KFold groups to cross-validation
     sklearn.set_config(enable_metadata_routing=True)
 
-    som_atoms_labeled = read_labeled_atoms_from_sdf(input_path)
+    atoms = read_labeled_atoms_from_sdf(input_path)
 
-    labels = [label for _, label in som_atoms_labeled]
-    containing_mol_ids = [atom.molecule.getObjectID() for atom, _ in som_atoms_labeled]
+    labels = [label for _, label in atoms]
+    containing_mol_ids = [atom.molecule.getObjectID() for atom, _ in atoms]
 
-    atom_count = len(som_atoms_labeled)
+    atom_count = len(atoms)
     mol_count = len(set(containing_mol_ids))
 
     with Spinner(
         title=f"Computing descriptors for {atom_count} atoms ({mol_count} molecules)"
     ):
         descriptors = FAME3RVectorizer(radius=radius, input="cdpkit").fit_transform(
-            [[som_atom] for som_atom, _ in som_atoms_labeled]
+            [[atom] for atom, _ in atoms]
         )
 
     k_fold = GroupKFold(n_splits=num_folds, random_state=42, shuffle=True)
@@ -596,7 +596,7 @@ def descriptors(
         typer.Option(
             "--input",
             "-i",
-            help="Path to SOM input data.",
+            help="Path to input data (SDF).",
         ),
     ],
     output_path: Annotated[
@@ -622,10 +622,10 @@ def descriptors(
         ),
     ] = ["fingerprint", "physicochemical", "topological"],
 ):
-    som_atoms = read_labeled_atoms_from_sdf(input_path)
-    containing_mol_ids = [atom.molecule.getObjectID() for atom, _ in som_atoms]
+    atoms = read_labeled_atoms_from_sdf(input_path)
+    containing_mol_ids = [atom.molecule.getObjectID() for atom, _ in atoms]
 
-    atom_count = len(som_atoms)
+    atom_count = len(atoms)
     mol_count = len(set(containing_mol_ids))
 
     vectorizer = FAME3RVectorizer(
@@ -638,7 +638,7 @@ def descriptors(
         title=f"Computing descriptors for {atom_count} atoms ({mol_count} molecules)"
     ):
         descriptors = vectorizer.fit_transform(
-            [[som_atom] for som_atom, _ in som_atoms]
+            [[atom] for atom, _ in atoms]
         )
 
     output_path.parent.mkdir(exist_ok=True, parents=True)
@@ -649,11 +649,11 @@ def descriptors(
         writer = csv.writer(f)
         writer.writerow(["smiles", "atom_id"] + vectorizer.get_feature_names_out())
 
-        for i in range(len(som_atoms)):
+        for i in range(len(atoms)):
             writer.writerow(
                 [
-                    generateSMILES(som_atoms[i][0].molecule),
-                    som_atoms[i][0].index,
+                    generateSMILES(atoms[i][0].molecule),
+                    atoms[i][0].index,
                 ]
                 + list(descriptors[i])
             )
