@@ -9,9 +9,10 @@ module:
   example_smiles: CN1CCN(Cc2ccc(cc2)C(=O)Nc3ccc(C)c(Nc4nccc(n4)c5cccnc5)c3)CC1 (imatinib)
   batch_size: 10
 
-  title: Prediction of Phase 1 and Phase 2 Sites of Metabolism (SoMs)
+  title: Prediction of Phase 1 and Phase 2 Sites of Metabolism (SOMs)
   description: |
-    TODO
+    FAME3R is a reimplementation of FAME3, a collection of machine learning models for prediction of both phase 1 and phase 2 sites of metabolism (SOMs).
+    SOMs are atoms where a metabolic reaction gets initiated and, thus, are a good starting point for determining the metabolic fate of xenobiotic compounds.
 
   partners:
     - name: University of Vienna
