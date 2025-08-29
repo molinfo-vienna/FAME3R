@@ -192,6 +192,7 @@ def train(
         joblib.dump(
             score_pipeline.named_steps["randomforestclassifier"],
             models_path / "random_forest_classifier.joblib",
+            compress=3,
         )
 
     if "fame-scorer" in model_kinds:
@@ -210,6 +211,7 @@ def train(
         joblib.dump(
             score_pipeline.named_steps["fame3rscoreestimator"],
             models_path / "fame3r_score_estimator.joblib",
+            compress=3,
         )
 
 
