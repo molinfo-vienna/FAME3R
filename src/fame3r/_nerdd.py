@@ -10,6 +10,7 @@ from nerdd_module import Model
 from nerdd_module.preprocessing import Sanitize
 from rdkit.Chem.rdchem import Mol
 from rdkit.Chem.rdmolfiles import MolToSmiles
+from scipy.stats import entropy
 from sklearn.pipeline import Pipeline, make_pipeline
 
 from fame3r import FAME3RVectorizer
@@ -55,6 +56,7 @@ class FAME3RModel(Model):
         mols: list[Mol],
         metabolism_subset: MetabolismSubset = "all",
         fame_score: bool = False,
+        shannon_entropy: bool = False,
     ) -> Iterable[dict]:
         models = self._models[metabolism_subset]
 
@@ -78,8 +80,13 @@ class FAME3RModel(Model):
         else:
             fame_scores = np.full_like(predictions, np.nan)
 
-        for (atom, mol_id), probability, fame_score in zip(
-            atoms, predictions, fame_scores, strict=True
+        if shannon_entropy:
+            shannon_entropies = entropy([predictions, 1-predictions], base=2)
+        else:
+            shannon_entropies = np.full_like(predictions, np.nan)
+
+        for (atom, mol_id), probability, fame_score, shannon_entropy in zip(
+            atoms, predictions, fame_scores, shannon_entropies, strict=True
         ):
             yield {
                 "mol_id": mol_id,
@@ -87,4 +94,5 @@ class FAME3RModel(Model):
                 "prediction": probability,
                 "prediction_binary": probability > THRESHOLD,
                 "fame_score": fame_score,
+                "shannon_entropy": shannon_entropy,
             }
