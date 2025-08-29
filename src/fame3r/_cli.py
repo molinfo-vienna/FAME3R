@@ -22,6 +22,7 @@ from CDPL.Chem import (
 from rich.console import Console
 from rich.json import JSON
 from rich.progress import Progress, SpinnerColumn, TextColumn, TimeElapsedColumn
+from scipy.stats import entropy
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (
     average_precision_score,
@@ -262,6 +263,13 @@ def predict(
             help="Also compute FAME score.",
         ),
     ] = False,
+    compute_shannon_entropy: Annotated[
+        bool,
+        typer.Option(
+            "--shannon-entropy",
+            help="Also compute Shannon entropy.",
+        ),
+    ] = False,
 ):
     atoms = read_labeled_atoms_from_sdf(input_path)
 
@@ -293,11 +301,20 @@ def predict(
         with Spinner(
             title=f"Predicting FAME scores for {atom_count} atoms ({mol_count} molecules)"
         ):
-            fame_scores = score_pipeline.predict(
-                [[atom] for atom, _ in atoms]
-            )
+            fame_scores = score_pipeline.predict([[atom] for atom, _ in atoms])
     else:
         fame_scores = np.full_like(prediction_probabilities, np.nan)
+
+    if compute_shannon_entropy:
+        with Spinner(
+            title=f"Predicting Shannon entropy for {atom_count} atoms ({mol_count} molecules)"
+        ):
+            shannon_entropies = entropy(
+                [prediction_probabilities, 1 - prediction_probabilities],
+                base=2,
+            )
+    else:
+        shannon_entropies = np.full_like(prediction_probabilities, np.nan)
 
     with output_path.open("w", encoding="UTF-8", newline="") as f:
         writer = csv.DictWriter(
@@ -309,6 +326,7 @@ def predict(
                 "y_pred",
                 "y_prob",
                 "fame_score",
+                "shannon_entropy",
             ],
         )
         writer.writeheader()
@@ -322,6 +340,7 @@ def predict(
                     "y_pred": int(predictions_binary[i]),
                     "y_prob": np.round(prediction_probabilities[i], 2),
                     "fame_score": np.round(fame_scores[i], 2),
+                    "shannon_entropy": np.round(shannon_entropies[i], 2),  # pyright:ignore
                 }
             )
 
@@ -637,9 +656,7 @@ def descriptors(
     with Spinner(
         title=f"Computing descriptors for {atom_count} atoms ({mol_count} molecules)"
     ):
-        descriptors = vectorizer.fit_transform(
-            [[atom] for atom, _ in atoms]
-        )
+        descriptors = vectorizer.fit_transform([[atom] for atom, _ in atoms])
 
     output_path.parent.mkdir(exist_ok=True, parents=True)
     with (
