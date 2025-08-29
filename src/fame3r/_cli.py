@@ -492,7 +492,6 @@ def hyperparameters(
             cv=k_fold,
             scoring=make_scorer(average_precision_score, greater_is_better=True),
             n_jobs=-1,
-            verbose=3,
         ).fit(descriptors, labels, groups=containing_mol_ids)
 
     if output_path:
