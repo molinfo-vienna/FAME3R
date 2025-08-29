@@ -25,16 +25,18 @@ module:
     TODO
 
   job_parameters:
-    - name: metabolism_phase
-      visible_name: Metabolism phase
+    - name: metabolism_subset
+      visible_name: Metabolism subset
       type: string
       choices:
         - value: all
           label: Phase 1 and 2 metabolism
         - value: phase1
-          label: Phase 1 Metabolism
+          label: Phase 1 metabolism
         - value: phase2
-          label: Phase 2 Metabolism
+          label: Phase 2 metabolism
+        - value: cyp
+          label: CYP-mediated metabolism
       default: all
     - name: fame_score
       visible_name: Compute FAME score for applicability domain

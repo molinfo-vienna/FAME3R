@@ -18,7 +18,7 @@ MODEL_DIRECTORY = Path(os.environ["FAME3R_MODEL_DIRECTORY"])
 THRESHOLD = 0.3
 
 
-MetabolismPhase = Literal["all", "phase1", "phase2", "cyp"]
+MetabolismSubset = Literal["all", "phase1", "phase2", "cyp"]
 
 
 @dataclass
@@ -32,9 +32,9 @@ class FAME3RModel(Model):
         super().__init__(preprocessing_steps)
 
         self._vectorizer = FAME3RVectorizer(radius=5, input="cdpkit").fit()
-        self._models: dict[MetabolismPhase, Models] = {}
+        self._models: dict[MetabolismSubset, Models] = {}
 
-        for phase in get_args(MetabolismPhase):
+        for phase in get_args(MetabolismSubset):
             self._models[phase] = Models(
                 classifier=make_pipeline(
                     FAME3RVectorizer(input="cdpkit").fit(),
@@ -53,10 +53,10 @@ class FAME3RModel(Model):
     def _predict_mols(
         self,
         mols: list[Mol],
-        metabolism_phase: MetabolismPhase = "all",
+        metabolism_subset: MetabolismSubset = "all",
         fame_score: bool = False,
     ) -> Iterable[dict]:
-        models = self._models[metabolism_phase]
+        models = self._models[metabolism_subset]
 
         cdpkit_mols = [parseSMILES(MolToSmiles(mol)) for mol in mols]
         atoms = [
