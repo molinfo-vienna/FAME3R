@@ -274,9 +274,15 @@ def predict(
     ] = False,
 ):
     atoms = read_labeled_atoms_from_sdf(input_path)
+    containing_mol_indices = {
+        object_id: index
+        for index, object_id in enumerate(
+            {atom.molecule.getObjectID(): None for atom, _ in atoms}
+        )
+    }
 
     atom_count = len(atoms)
-    mol_count = len({atom.molecule.getObjectID() for atom, _ in atoms})
+    mol_count = len(containing_mol_indices)
 
     classifier = joblib.load(models_path / "random_forest_classifier.joblib")
     clf_pipeline = make_pipeline(
@@ -323,6 +329,7 @@ def predict(
             f,
             fieldnames=[
                 "smiles",
+                "mol_id",
                 "atom_id",
                 "y_true",
                 "y_pred",
@@ -337,6 +344,9 @@ def predict(
             writer.writerow(
                 {
                     "smiles": generateSMILES(atoms[i][0].molecule),
+                    "mol_id": containing_mol_indices[
+                        atoms[i][0].molecule.getObjectID()
+                    ],
                     "atom_id": atoms[i][0].index,
                     "y_true": int(atoms[i][1]),
                     "y_pred": int(predictions_binary[i]),
@@ -644,10 +654,15 @@ def descriptors(
     ] = ["fingerprint", "physicochemical", "topological"],
 ):
     atoms = read_labeled_atoms_from_sdf(input_path)
-    containing_mol_ids = [atom.molecule.getObjectID() for atom, _ in atoms]
+    containing_mol_indices = {
+        object_id: index
+        for index, object_id in enumerate(
+            {atom.molecule.getObjectID(): None for atom, _ in atoms}
+        )
+    }
 
     atom_count = len(atoms)
-    mol_count = len(set(containing_mol_ids))
+    mol_count = len(containing_mol_indices)
 
     vectorizer = FAME3RVectorizer(
         radius=radius,
@@ -666,12 +681,15 @@ def descriptors(
         output_path.open("w", encoding="UTF-8", newline="") as f,
     ):
         writer = csv.writer(f)
-        writer.writerow(["smiles", "atom_id"] + vectorizer.get_feature_names_out())
+        writer.writerow(
+            ["smiles", "mol_id", "atom_id"] + vectorizer.get_feature_names_out()
+        )
 
         for i in range(len(atoms)):
             writer.writerow(
                 [
                     generateSMILES(atoms[i][0].molecule),
+                    containing_mol_indices[atoms[i][0].molecule.getObjectID()],
                     atoms[i][0].index,
                 ]
                 + list(descriptors[i])
