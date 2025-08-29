@@ -24,6 +24,23 @@ module:
   about: |
     TODO
 
+  job_parameters:
+    - name: metabolism_phase
+      visible_name: Metabolism phase
+      type: string
+      choices:
+        - value: all
+          label: Phase 1 and 2 metabolism
+        - value: phase1
+          label: Phase 1 Metabolism
+        - value: phase2
+          label: Phase 2 Metabolism
+      default: all
+    - name: fame_score
+      visible_name: Compute FAME score for applicability domain
+      type: bool
+      default: False
+
   result_properties:
     - name: prediction
       visible_name: Probability
@@ -48,17 +65,17 @@ module:
         range:
           - negative
           - positive
-    # - name: fame_score
-    #   visible_name: Fame score
-    #   type: float
-    #   sortable: True
-    #   level: atom
-    #   format: .2f
-    #   color_palette:
-    #     type: sequential
-    #     domain:
-    #       - 0
-    #       - 1
-    #     range:
-    #       - neutral
-    #       - positive
+    - name: fame_score
+      visible_name: Fame score
+      type: float
+      sortable: True
+      level: atom
+      format: .2f
+      color_palette:
+        type: sequential
+        domain:
+          - 0
+          - 1
+        range:
+          - neutral
+          - positive

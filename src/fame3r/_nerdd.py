@@ -1,6 +1,7 @@
 import os
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Literal, get_args
 
 import joblib
 import numpy as np
@@ -9,7 +10,7 @@ from nerdd_module import Model
 from nerdd_module.preprocessing import Sanitize
 from rdkit.Chem.rdchem import Mol
 from rdkit.Chem.rdmolfiles import MolToSmiles
-from sklearn.pipeline import make_pipeline
+from sklearn.pipeline import Pipeline, make_pipeline
 
 from fame3r import FAME3RVectorizer
 
@@ -17,16 +18,46 @@ MODEL_DIRECTORY = Path(os.environ["FAME3R_MODEL_DIRECTORY"])
 THRESHOLD = 0.3
 
 
+MetabolismPhase = Literal["all", "phase1", "phase2", "cyp"]
+
+
+@dataclass
+class Models:
+    classifier: Pipeline
+    fame_scorer: Pipeline
+
+
 class FAME3RModel(Model):
     def __init__(self, preprocessing_steps=[Sanitize()]):
         super().__init__(preprocessing_steps)
 
-        self._model = make_pipeline(
-            FAME3RVectorizer(radius=5, input="cdpkit").fit(),
-            joblib.load(MODEL_DIRECTORY / "random_forest_classifier.joblib"),
-        )
+        self._vectorizer = FAME3RVectorizer(radius=5, input="cdpkit").fit()
+        self._models: dict[MetabolismPhase, Models] = {}
 
-    def _predict_mols(self, mols: list[Mol]) -> Iterable[dict]:
+        for phase in get_args(MetabolismPhase):
+            self._models[phase] = Models(
+                classifier=make_pipeline(
+                    FAME3RVectorizer(input="cdpkit").fit(),
+                    joblib.load(
+                        MODEL_DIRECTORY / phase / "random_forest_classifier.joblib",
+                    )
+                ),
+                fame_scorer=make_pipeline(
+                    FAME3RVectorizer(input="cdpkit", output=["fingerprint"]).fit(),
+                    joblib.load(
+                        MODEL_DIRECTORY / phase / "fame3r_score_estimator.joblib",
+                    ),
+                ),
+            )
+
+    def _predict_mols(
+        self,
+        mols: list[Mol],
+        metabolism_phase: MetabolismPhase = "all",
+        fame_score: bool = False,
+    ) -> Iterable[dict]:
+        models = self._models[metabolism_phase]
+
         cdpkit_mols = [parseSMILES(MolToSmiles(mol)) for mol in mols]
         atoms = [
             (atom, mol_id)
@@ -40,12 +71,20 @@ class FAME3RModel(Model):
         atom_array = np.empty((len(atoms), 1), dtype=object)
         atom_array[:, 0] = [atom for atom, _ in atoms]
 
-        predictions = self._model.predict_proba(atom_array)[:, 1]
+        predictions = models.classifier.predict_proba(atom_array)[:, 1]
 
-        for (atom, mol_id), probability in zip(atoms, predictions):
+        if fame_score:
+            fame_scores = models.fame_scorer.predict(atom_array)
+        else:
+            fame_scores = np.full_like(predictions, np.nan)
+
+        for (atom, mol_id), probability, fame_score in zip(
+            atoms, predictions, fame_scores, strict=True
+        ):
             yield {
                 "mol_id": mol_id,
                 "atom_id": atom.index,
                 "prediction": probability,
                 "prediction_binary": probability > THRESHOLD,
+                "fame_score": fame_score,
             }
