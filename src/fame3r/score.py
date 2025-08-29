@@ -94,7 +94,10 @@ class FAME3RScoreEstimator(BaseEstimator, _SetOutputMixin):
 
         similarity_matrix = _tanimoto_similarity_matrix(self._reference_data, X)
 
-        return np.mean(np.sort(similarity_matrix, axis=0)[-3:], axis=0)
+        return np.mean(
+            np.sort(similarity_matrix, axis=0)[-self.n_neighbors :],
+            axis=0,
+        )
 
     def get_feature_names_out(self, input_features=None):
         """Get output feature names for transformation.
