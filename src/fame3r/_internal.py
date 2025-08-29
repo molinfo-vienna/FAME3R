@@ -1,5 +1,7 @@
 # pyright: reportAttributeAccessIssue=false
 
+import warnings
+
 import numpy as np
 import numpy.typing as npt
 from CDPL import Chem, ForceField, MolProp
@@ -70,6 +72,10 @@ def generate_fingerprints(
     for atom in env.atoms:
         sybyl_type = Chem.getSybylType(atom)
         if sybyl_type not in SYBYL_ATOM_TYPE_IDX_CDPKIT:
+            warnings.warn(
+                f"Unknown SYBYL atom type: {sybyl_type}",
+                category=RuntimeWarning,
+            )
             continue
 
         sybyl_type_index = SYBYL_ATOM_TYPE_IDX_CDPKIT.index(sybyl_type)
