@@ -59,7 +59,7 @@ def extract_som_labels(mol: MolecularGraph) -> list[tuple[Atom, bool]]:
     return [(atom, atom.index in som_indices) for atom in mol.atoms]
 
 
-def read_labeled_atoms_from_sdf(path: PathLike) -> list[Atom]:
+def read_labeled_atoms_from_sdf(path: PathLike) -> list[tuple[Atom, bool]]:
     results = []
 
     reader = FileSDFMoleculeReader(str(path))
