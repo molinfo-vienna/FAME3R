@@ -71,6 +71,7 @@ python_use_unqualified_type_names = True
 
 numpydoc_show_class_members = False
 
+
 # -- Options for InterSphinx linking -----------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html
 
