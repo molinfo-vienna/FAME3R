@@ -92,11 +92,11 @@ class FAME3RScoreEstimator(BaseEstimator, _SetOutputMixin):
             estimator=FAME3RScoreEstimator,
         )
 
-        similarity_matrix = _tanimoto_similarity_matrix(self._reference_data, X)
-
-        return np.mean(
-            np.sort(similarity_matrix, axis=0)[-self.n_neighbors :],
-            axis=0,
+        return np.concat(
+            [
+                _fame_score(self._reference_data, X_batch, n_neighbors=self.n_neighbors)
+                for X_batch in np.array_split(X, 100)
+            ]
         )
 
     def get_feature_names_out(self, input_features=None):
@@ -113,6 +113,15 @@ class FAME3RScoreEstimator(BaseEstimator, _SetOutputMixin):
             Transformed feature names.
         """
         return ["FAME3RScore"]
+
+
+def _fame_score(reference, X, *, n_neighbors):
+    similarity_matrix = _tanimoto_similarity_matrix(reference, X)
+
+    return np.mean(
+        np.sort(similarity_matrix, axis=0)[-n_neighbors:],
+        axis=0,
+    )
 
 
 def _tanimoto_similarity_matrix(A, B):
