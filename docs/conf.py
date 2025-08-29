@@ -30,6 +30,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "numpydoc",
     "sphinx_copybutton",
+    "myst_nb",
 ]
 
 templates_path = ["_templates"]
@@ -78,6 +79,13 @@ intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable/", None),
     "sklearn": ("https://scikit-learn.org/stable/", None),
 }
+
+
+# -- Options for MyST-NB notebook handling -----------------------------------
+# https://myst-nb.readthedocs.io/en/latest/configuration.html
+
+nb_execution_in_temp = False
+nb_execution_timeout = 60 * 30
 
 
 # -- Enable strict reference resolution --------------------------------------

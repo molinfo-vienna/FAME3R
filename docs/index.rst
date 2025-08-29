@@ -15,7 +15,8 @@
    :hidden:
    :glob:
 
-   source/tutorials/*
+   source/tutorials/CommandLine.ipynb
+   source/tutorials/PythonAPI.ipynb
 
 .. toctree::
    :caption: Documentation
