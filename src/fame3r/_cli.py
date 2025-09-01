@@ -13,11 +13,13 @@ import sklearn
 import typer
 from CDPL.Chem import (
     Atom,  # pyright:ignore[reportAttributeAccessIssue]
+    AtomProperty,  # pyright:ignore[reportAttributeAccessIssue]
     BasicMolecule,  # pyright:ignore[reportAttributeAccessIssue]
     FileSDFMoleculeReader,  # pyright:ignore[reportAttributeAccessIssue]
     MolecularGraph,  # pyright:ignore[reportAttributeAccessIssue]
     generateSMILES,  # pyright:ignore[reportAttributeAccessIssue]
     getStructureData,  # pyright:ignore[reportAttributeAccessIssue]
+    parseSMILES,  # pyright:ignore[reportAttributeAccessIssue]
 )
 from rich.console import Console
 from rich.json import JSON
@@ -71,6 +73,30 @@ def read_labeled_atoms_from_sdf(path: PathLike) -> list[tuple[Atom, bool]]:
     return results
 
 
+def read_labeled_atoms_from_smi(path: PathLike) -> list[tuple[Atom, bool]]:
+    results = []
+
+    for smiles in Path(path).read_text().splitlines():
+        mol = parseSMILES(smiles)
+        results.extend(
+            (atom, bool(atom.getProperty(AtomProperty.ATOM_MAPPING_ID)))
+            for atom in mol.atoms
+        )
+
+    return results
+
+
+def read_labeled_atoms(path: PathLike) -> list[tuple[Atom, bool]]:
+    ext = Path(path).suffix
+
+    if ext == ".smi":
+        return read_labeled_atoms_from_smi(path)
+    elif ext in [".sdf", ".mol2", ".mol"]:
+        return read_labeled_atoms_from_sdf(path)
+    else:
+        raise RuntimeError(f"Unknown file format extension `{ext}`.")
+
+
 def top2_rate_score(y_true, y_prob, groups):
     unique_groups, _ = np.unique(groups, return_index=True)
     top2_sucesses = 0
@@ -122,7 +148,7 @@ def train(
         typer.Option(
             "--input",
             "-i",
-            help="Path to input training data (SDF).",
+            help="Path to input training data (SDF, SMILES).",
         ),
     ],
     models_path: Annotated[
@@ -158,7 +184,7 @@ def train(
         int, typer.Option(help="Number of neighbors for FAME score estimator.")
     ] = 3,
 ):
-    atoms = read_labeled_atoms_from_sdf(input_path)
+    atoms = read_labeled_atoms(input_path)
 
     atom_count = len(atoms)
     mol_count = len({atom.molecule.getObjectID() for atom, _ in atoms})
@@ -225,7 +251,7 @@ def predict(
         typer.Option(
             "--input",
             "-i",
-            help="Path to input data for which to predict SOMs (SDF).",
+            help="Path to input data for which to predict SOMs (SDF, SMILES).",
         ),
     ],
     models_path: Annotated[
@@ -273,7 +299,7 @@ def predict(
         ),
     ] = False,
 ):
-    atoms = read_labeled_atoms_from_sdf(input_path)
+    atoms = read_labeled_atoms(input_path)
     containing_mol_indices = {
         object_id: index
         for index, object_id in enumerate(
@@ -463,7 +489,7 @@ def hyperparameters(
         typer.Option(
             "--input",
             "-i",
-            help="Path to input training data (SDF).",
+            help="Path to input training data (SDF, SMILES).",
         ),
     ],
     output_path: Annotated[
@@ -492,7 +518,7 @@ def hyperparameters(
     # Required for passing KFold groups to cross-validation
     sklearn.set_config(enable_metadata_routing=True)
 
-    atoms = read_labeled_atoms_from_sdf(input_path)
+    atoms = read_labeled_atoms(input_path)
 
     labels = [label for _, label in atoms]
     containing_mol_ids = [atom.molecule.getObjectID() for atom, _ in atoms]
@@ -542,7 +568,7 @@ def threshold(
         typer.Option(
             "--input",
             "-i",
-            help="Path to input training data (SDF).",
+            help="Path to input training data (SDF, SMILES).",
         ),
     ],
     model_path: Annotated[
@@ -579,7 +605,7 @@ def threshold(
     # Required for passing KFold groups to cross-validation
     sklearn.set_config(enable_metadata_routing=True)
 
-    atoms = read_labeled_atoms_from_sdf(input_path)
+    atoms = read_labeled_atoms(input_path)
 
     labels = [label for _, label in atoms]
     containing_mol_ids = [atom.molecule.getObjectID() for atom, _ in atoms]
@@ -627,7 +653,7 @@ def descriptors(
         typer.Option(
             "--input",
             "-i",
-            help="Path to input data (SDF).",
+            help="Path to input data (SDF, SMILES).",
         ),
     ],
     output_path: Annotated[
@@ -653,7 +679,7 @@ def descriptors(
         ),
     ] = ["fingerprint", "physicochemical", "topological"],
 ):
-    atoms = read_labeled_atoms_from_sdf(input_path)
+    atoms = read_labeled_atoms(input_path)
     containing_mol_indices = {
         object_id: index
         for index, object_id in enumerate(
