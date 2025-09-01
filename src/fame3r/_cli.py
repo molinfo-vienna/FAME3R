@@ -5,7 +5,7 @@ from collections import Counter
 from contextlib import contextmanager
 from os import PathLike
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, cast
 
 import click
 import joblib
@@ -341,9 +341,12 @@ def predict(
         with Spinner(
             title=f"Predicting Shannon entropy for {atom_count} atoms ({mol_count} molecules)"
         ):
-            shannon_entropies = entropy(
-                [prediction_probabilities, 1 - prediction_probabilities],
-                base=2,
+            shannon_entropies = cast(
+                np.ndarray,
+                entropy(
+                    [prediction_probabilities, 1 - prediction_probabilities],
+                    base=2,
+                ),
             )
     else:
         shannon_entropies = np.full_like(prediction_probabilities, np.nan)
@@ -376,7 +379,7 @@ def predict(
                     "y_pred": int(predictions_binary[i]),
                     "y_prob": np.round(prediction_probabilities[i], 2),
                     "fame_score": np.round(fame_scores[i], 2),
-                    "shannon_entropy": np.round(shannon_entropies[i], 2),  # pyright:ignore
+                    "shannon_entropy": np.round(shannon_entropies[i], 2),
                 }
             )
 

@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 import pytest
 from sklearn.pipeline import make_pipeline
@@ -22,7 +24,7 @@ som_marked_smiles_test = [
 def full_numpy_output():
     # This is required so that the full arrays are compared and saved
     # as snapshots, not just summaries.
-    with np.printoptions(threshold=np.inf):  # pyright:ignore
+    with np.printoptions(threshold=sys.maxsize):
         yield
 
 

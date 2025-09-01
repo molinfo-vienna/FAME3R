@@ -2,7 +2,11 @@ from typing import Literal
 
 import numpy as np
 import numpy.typing as npt
-from CDPL.Chem import Atom, AtomProperty, parseSMILES  # pyright:ignore
+from CDPL.Chem import (
+    Atom,  # pyright:ignore[reportAttributeAccessIssue]
+    AtomProperty,  # pyright:ignore[reportAttributeAccessIssue]
+    parseSMILES,  # pyright:ignore[reportAttributeAccessIssue]
+)
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils._set_output import _SetOutputMixin
 from sklearn.utils.validation import check_is_fitted, validate_data
