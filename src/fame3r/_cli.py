@@ -283,7 +283,7 @@ def predict(
         float,
         typer.Option(
             "--threshold",
-            help="Prediction probability threshold",
+            help="Prediction probability threshold.",
         ),
     ] = 0.3,
     uncertainty_kinds: Annotated[
