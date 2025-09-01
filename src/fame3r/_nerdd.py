@@ -1,7 +1,7 @@
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Literal, get_args
+from typing import Iterable, Literal, cast, get_args
 
 import joblib
 import numpy as np
@@ -41,7 +41,7 @@ class FAME3RModel(Model):
                     FAME3RVectorizer(input="cdpkit").fit(),
                     joblib.load(
                         MODEL_DIRECTORY / phase / "random_forest_classifier.joblib",
-                    )
+                    ),
                 ),
                 fame_scorer=make_pipeline(
                     FAME3RVectorizer(input="cdpkit", output=["fingerprint"]).fit(),
@@ -81,7 +81,9 @@ class FAME3RModel(Model):
             fame_scores = np.full_like(predictions, np.nan)
 
         if shannon_entropy:
-            shannon_entropies = entropy([predictions, 1-predictions], base=2)
+            shannon_entropies = cast(
+                np.ndarray, entropy([predictions, 1 - predictions], base=2)
+            )
         else:
             shannon_entropies = np.full_like(predictions, np.nan)
 
