@@ -7,6 +7,7 @@ from os import PathLike
 from pathlib import Path
 from typing import Annotated
 
+import click
 import joblib
 import numpy as np
 import sklearn
@@ -163,12 +164,13 @@ def train(
         ),
     ] = 5,
     model_kinds: Annotated[
-        list[str],
+        set[str],
         typer.Option(
             "--kind",
             help="Models to train.",
+            click_type=click.Choice(["random-forest", "fame-scorer"]),
         ),
-    ] = ["random-forest", "fame-scorer"],
+    ] = {"random-forest", "fame-scorer"},
     hyperparameter_path: Annotated[
         Path | None,
         typer.Option(
@@ -284,20 +286,14 @@ def predict(
             help="Prediction probability threshold",
         ),
     ] = 0.3,
-    compute_fame_score: Annotated[
-        bool,
+    uncertainty_kinds: Annotated[
+        set[str],
         typer.Option(
-            "--fame-score",
-            help="Also compute FAME score.",
+            "--uncertainty",
+            help="Uncertainty quantification scores to compute.",
+            click_type=click.Choice(["fame-score", "shannon-entropy"]),
         ),
-    ] = False,
-    compute_shannon_entropy: Annotated[
-        bool,
-        typer.Option(
-            "--shannon-entropy",
-            help="Also compute Shannon entropy.",
-        ),
-    ] = False,
+    ] = set(),
 ):
     atoms = read_labeled_atoms(input_path)
     containing_mol_indices = {
@@ -325,7 +321,7 @@ def predict(
         prediction_probabilities = clf_pipeline.predict_proba(atom_array)[:, 1]
         predictions_binary = prediction_probabilities > threshold
 
-    if compute_fame_score:
+    if "fame-score" in uncertainty_kinds:
         score_estimator = joblib.load(models_path / "fame3r_score_estimator.joblib")
         score_pipeline = make_pipeline(
             FAME3RVectorizer(
@@ -341,7 +337,7 @@ def predict(
     else:
         fame_scores = np.full_like(prediction_probabilities, np.nan)
 
-    if compute_shannon_entropy:
+    if "shannon-entropy" in uncertainty_kinds:
         with Spinner(
             title=f"Predicting Shannon entropy for {atom_count} atoms ({mol_count} molecules)"
         ):
