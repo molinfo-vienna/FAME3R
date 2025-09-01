@@ -464,14 +464,13 @@ def metrics(
 
     computed_metrics = {
         key: {
-            "mean": np.round(
-                np.mean([sample[key] for sample in computed_metrics_samples]), 4
-            ),
-            "std": np.round(
-                np.std([sample[key] for sample in computed_metrics_samples]), 4
-            ),
+            "mean": np.round(np.mean(values), 4),
+            "std": np.round(np.std(values), 4),
         }
-        for key in computed_metrics_samples[0].keys()
+        for key, values in {
+            key: [sample[key] for sample in computed_metrics_samples]
+            for key in computed_metrics_samples[0].keys()
+        }.items()
     }
 
     if output_path:
