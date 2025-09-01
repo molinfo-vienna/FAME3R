@@ -44,10 +44,6 @@ from sklearn.pipeline import make_pipeline
 
 from fame3r import FAME3RScoreEstimator, FAME3RVectorizer
 
-# Unfortunately, this monkey-patching is required to get CDPKit
-# objects like atoms and molecules into NumPy arrays...
-del Atom.__getitem__
-
 
 def extract_som_labels(mol: MolecularGraph) -> list[tuple[Atom, bool]]:
     structure_data = {
@@ -189,6 +185,10 @@ def train(
     atom_count = len(atoms)
     mol_count = len({atom.molecule.getObjectID() for atom, _ in atoms})
 
+    # Required because CDPKit atom defines __getitem__
+    atom_array = np.empty((atom_count, 1), dtype=object)
+    atom_array[:, 0] = [atom for atom, _ in atoms]
+
     if "random-forest" in model_kinds:
         hyperparameters = (
             json.loads(hyperparameter_path.read_text())
@@ -210,7 +210,7 @@ def train(
                 FAME3RVectorizer(radius=radius, input="cdpkit"),
                 RandomForestClassifier(random_state=42, **hyperparameters),
             ).fit(
-                [[atom] for atom, _ in atoms],
+                atom_array,
                 [label for _, label in atoms],
             )
 
@@ -229,7 +229,7 @@ def train(
                 FAME3RVectorizer(radius=radius, input="cdpkit", output=["fingerprint"]),
                 FAME3RScoreEstimator(n_neighbors=n_neighbors),
             ).fit(
-                [[atom] for atom, _ in atoms],
+                atom_array,
                 [label for _, label in atoms],
             )
 
@@ -310,6 +310,10 @@ def predict(
     atom_count = len(atoms)
     mol_count = len(containing_mol_indices)
 
+    # Required because CDPKit atom defines __getitem__
+    atom_array = np.empty((atom_count, 1), dtype=object)
+    atom_array[:, 0] = [atom for atom, _ in atoms]
+
     classifier = joblib.load(models_path / "random_forest_classifier.joblib")
     clf_pipeline = make_pipeline(
         FAME3RVectorizer(radius=radius, input="cdpkit").fit(), classifier
@@ -318,9 +322,7 @@ def predict(
     with Spinner(
         title=f"Predicting SOM probabilities for {atom_count} atoms ({mol_count} molecules)"
     ):
-        prediction_probabilities = clf_pipeline.predict_proba(
-            [[atom] for atom, _ in atoms]
-        )[:, 1]
+        prediction_probabilities = clf_pipeline.predict_proba(atom_array)[:, 1]
         predictions_binary = prediction_probabilities > threshold
 
     if compute_fame_score:
@@ -335,7 +337,7 @@ def predict(
         with Spinner(
             title=f"Predicting FAME scores for {atom_count} atoms ({mol_count} molecules)"
         ):
-            fame_scores = score_pipeline.predict([[atom] for atom, _ in atoms])
+            fame_scores = score_pipeline.predict(atom_array)
     else:
         fame_scores = np.full_like(prediction_probabilities, np.nan)
 
@@ -526,11 +528,15 @@ def hyperparameters(
     atom_count = len(atoms)
     mol_count = len(set(containing_mol_ids))
 
+    # Required because CDPKit atom defines __getitem__
+    atom_array = np.empty((atom_count, 1), dtype=object)
+    atom_array[:, 0] = [atom for atom, _ in atoms]
+
     with Spinner(
         title=f"Computing descriptors for {atom_count} atoms ({mol_count} molecules)"
     ):
         descriptors = FAME3RVectorizer(radius=radius, input="cdpkit").fit_transform(
-            [[atom] for atom, _ in atoms]
+            atom_array
         )
 
     k_fold = GroupKFold(n_splits=num_folds, random_state=42, shuffle=True)
@@ -613,11 +619,15 @@ def threshold(
     atom_count = len(atoms)
     mol_count = len(set(containing_mol_ids))
 
+    # Required because CDPKit atom defines __getitem__
+    atom_array = np.empty((atom_count, 1), dtype=object)
+    atom_array[:, 0] = [atom for atom, _ in atoms]
+
     with Spinner(
         title=f"Computing descriptors for {atom_count} atoms ({mol_count} molecules)"
     ):
         descriptors = FAME3RVectorizer(radius=radius, input="cdpkit").fit_transform(
-            [[atom] for atom, _ in atoms]
+            atom_array
         )
 
     k_fold = GroupKFold(n_splits=num_folds, random_state=42, shuffle=True)
@@ -690,6 +700,10 @@ def descriptors(
     atom_count = len(atoms)
     mol_count = len(containing_mol_indices)
 
+    # Required because CDPKit atom defines __getitem__
+    atom_array = np.empty((atom_count, 1), dtype=object)
+    atom_array[:, 0] = [atom for atom, _ in atoms]
+
     vectorizer = FAME3RVectorizer(
         radius=radius,
         input="cdpkit",
@@ -699,7 +713,7 @@ def descriptors(
     with Spinner(
         title=f"Computing descriptors for {atom_count} atoms ({mol_count} molecules)"
     ):
-        descriptors = vectorizer.fit_transform([[atom] for atom, _ in atoms])
+        descriptors = vectorizer.fit_transform(atom_array)
 
     output_path.parent.mkdir(exist_ok=True, parents=True)
     with (
