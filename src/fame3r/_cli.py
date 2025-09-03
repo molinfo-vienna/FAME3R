@@ -164,13 +164,13 @@ def train(
         ),
     ] = 5,
     model_kinds: Annotated[
-        set[str],
+        list[str],
         typer.Option(
             "--kind",
             help="Models to train.",
             click_type=click.Choice(["random-forest", "fame-scorer"]),
         ),
-    ] = {"random-forest", "fame-scorer"},
+    ] = ["random-forest", "fame-scorer"],
     hyperparameter_path: Annotated[
         Path | None,
         typer.Option(
@@ -287,13 +287,13 @@ def predict(
         ),
     ] = 0.3,
     uncertainty_kinds: Annotated[
-        set[str],
+        list[str],
         typer.Option(
             "--uncertainty",
             help="Uncertainty quantification scores to compute.",
             click_type=click.Choice(["fame-score", "shannon-entropy"]),
         ),
-    ] = set(),
+    ] = [],
 ):
     atoms = read_labeled_atoms(input_path)
     containing_mol_indices = {
@@ -684,6 +684,9 @@ def descriptors(
         typer.Option(
             "--subset",
             help="Subsets of FAME3R descriptors to generate.",
+            click_type=click.Choice(
+                ["fingerprint", "counts", "physicochemical", "topological"]
+            ),
         ),
     ] = ["fingerprint", "physicochemical", "topological"],
 ):
