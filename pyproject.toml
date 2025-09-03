@@ -4,66 +4,72 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fame3r"
-version = "1.0.4"
+version = "2.0.0"
 description = "FAME3R: a re-implementation of the FAME3 model"
-readme = "README.md"
-requires-python = ">=3.10"
+readme = "README.rst"
+requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [
-  {name = "Roxane Jacob", email = "roxane.axel.jacob@univie.ac.at"},
+    {name = "Roxane Jacob", email = "roxane.axel.jacob@univie.ac.at"},
+    {name = "Leo Gaskin", email = "leo.gaskin@univie.ac.at"},
 ]
 
 dependencies = [
-  "CDPKit==1.2.3",
-  "joblib==1.4.2",
-  "numpy>=1.26.4, <2.0.0",
-  "pandas>=2.2.2",
-  "scikit-learn>=1.5.1",
-  "tqdm>=4.67.1",
+    "CDPKit==1.2.3",
+    "joblib==1.4.2",
+    "numpy>=2.3.2",
+    "scikit-learn>=1.5.1",
 ]
 
 [project.optional-dependencies]
+cli = [
+    "typer>=0.16.0",
+]
+nerdd = [
+    "nerdd-link>=0.5.0",
+    "nerdd-module>=0.3.42",
+]
+
+[dependency-groups]
+build = ["build"]
+tests = [
+    "pytest>=8.4.1",
+    "syrupy>=4.9.1",
+]
+docs = [
+    "sphinx>=8.2.3",
+    "sphinx-book-theme>=1.1.4",
+    "sphinx-copybutton>=0.5.2",
+    "numpydoc>=1.9.0",
+    "rdkit>=2025.3.5",
+    "myst-nb>=1.3.0",
+]
 dev = [
-  "build",
-  "black",
-  "flake8",
-  "isort",
-  "mypy",
-  "pydocstyle",
-  "pylint",
-  "pytest",
+    "basedpyright>=1.29.4",
+    "jupyter>=1.1.1",
+    "jupyter-ruff>=0.3.0",
+    "ruff>=0.11.13",
+    { include-group = "build" },
+    { include-group = "tests" },
+    { include-group = "docs" },
 ]
 
 [project.scripts]
-fame3r-cv-hp-search = "scripts.cv_hp_search:main"
-fame3r-infer = "scripts.infer:main"
-fame3r-test = "scripts.test:main"
-fame3r-train = "scripts.train:main"
+fame3r = "fame3r._cli:app"
 
 [tool.hatch.build.targets.sdist]
-include = [
-  "fame3r",
-  "scripts",
-]
+only-include = ["src/fame3r"]
 
 [tool.hatch.build.targets.wheel]
-include = [
-  "fame3r",
-  "scripts",
+packages = ["src/fame3r"]
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
 ]
 
-[tool.pylint.messages_control]
-disable = [
-    "no-member", # needed because CDPKit does not include module stub files
-    "too-few-public-methods",
-    "duplicate-code",
-    "too-many-locals",
-    "too-many-statements",
-    "consider-using-enumerate",
-]
+[tool.pyright]
+typeCheckingMode = "basic"
 
-[tool.isort]
-profile = "black"
-
-[tool.mypy]
-ignore_missing_imports = true
+[tool.ruff.lint]
+extend-select = ["I"]
