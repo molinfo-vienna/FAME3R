@@ -21,7 +21,7 @@ FAME3R is a random forest model predicting the phase 1 and phase 2 sites of meta
 Documentation
 *************
 
-The documentation, including installation instructions, tutorials for using the software, and full Python API documentation can be found online on `GitHub Pages <https://molinfo-vienna.github.io/FAME3R/master/html/>`_.
+The documentation, including installation instructions, tutorials for using the software, and full Python API documentation can be found online on `GitHub Pages <https://molinfo-vienna.github.io/FAME3R/main/html/>`_.
 
 License
 *******
