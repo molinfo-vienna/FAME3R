@@ -23,6 +23,11 @@ Documentation
 
 The documentation, including installation instructions, tutorials for using the software, and full Python API documentation can be found online on `GitHub Pages <https://molinfo-vienna.github.io/FAME3R/main/html/>`_.
 
+Citation
+********
+
+Please refer to the `Citation <https://molinfo-vienna.github.io/FAME3R/main/html/source/citation.html>`_ section in our documentation.
+
 License
 *******
 
