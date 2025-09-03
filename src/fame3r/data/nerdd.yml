@@ -1,0 +1,101 @@
+module:
+  rank: 3
+  name: fame3r
+  visible_name: FAME3R
+  visible: False
+  logo: !image logo.svg
+  logo_title: Sites of Metabolism
+  logo_caption: Regioselectivity prediction for phase 1 and phase 2 metabolism
+  example_smiles: CN1CCN(Cc2ccc(cc2)C(=O)Nc3ccc(C)c(Nc4nccc(n4)c5cccnc5)c3)CC1 (imatinib)
+  batch_size: 10
+
+  title: Prediction of Phase 1 and Phase 2 Sites of Metabolism (SOMs)
+  description: |
+    FAME3R is a reimplementation of FAME3, a collection of machine learning models for prediction of both phase 1 and phase 2 sites of metabolism (SOMs).
+    SOMs are atoms where a metabolic reaction gets initiated and, thus, are a good starting point for determining the metabolic fate of xenobiotic compounds.
+
+  partners:
+    - name: University of Vienna
+      logo: !image logo_vienna.gif
+      url: https://www.univie.ac.at/en
+
+  publications: []
+
+  about: |
+    TODO
+
+  job_parameters:
+    - name: metabolism_subset
+      visible_name: Metabolism subset
+      type: string
+      choices:
+        - value: all
+          label: Phase 1 and 2 metabolism
+        - value: phase1
+          label: Phase 1 metabolism
+        - value: phase2
+          label: Phase 2 metabolism
+        - value: cyp
+          label: CYP-mediated metabolism
+      default: all
+    - name: fame_score
+      visible_name: Compute FAME score for applicability domain
+      type: bool
+      default: False
+    - name: shannon_entropy
+      visible_name: Compute Shannon entropy for applicability domain
+      type: bool
+      default: False
+
+  result_properties:
+    - name: prediction
+      visible_name: Probability
+      type: float
+      sortable: True
+      level: atom
+      format: .2f
+      color_palette:
+        type: sequential
+        domain:
+          - 0
+          - 1
+        range:
+          - neutral
+          - positive
+    - name: prediction_binary
+      visible_name: SOM
+      type: bool
+      sortable: True
+      level: atom
+      color_palette:
+        range:
+          - negative
+          - positive
+    - name: fame_score
+      visible_name: Fame score
+      type: float
+      sortable: True
+      level: atom
+      format: .2f
+      color_palette:
+        type: sequential
+        domain:
+          - 0
+          - 1
+        range:
+          - neutral
+          - positive
+    - name: shannon_entropy
+      visible_name: Shannon entropy
+      type: float
+      sortable: True
+      level: atom
+      format: .2f
+      color_palette:
+        type: sequential
+        domain:
+          - 0
+          - 1
+        range:
+          - positive
+          - neutral
