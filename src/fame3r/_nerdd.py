@@ -6,10 +6,10 @@ from typing import Iterable, Literal, cast, get_args
 import joblib
 import numpy as np
 from CDPL.Chem import parseSMILES  # pyright:ignore[reportAttributeAccessIssue]
-from nerdd_module import Model
-from nerdd_module.preprocessing import Sanitize
+from nerdd_module import InvalidSmiles, Model, Problem
+from nerdd_module.preprocessing import PreprocessingStep, Sanitize
 from rdkit.Chem.rdchem import Mol
-from rdkit.Chem.rdmolfiles import MolToSmiles
+from rdkit.Chem.rdmolfiles import MolFromSmiles, MolToSmiles
 from scipy.stats import entropy
 from sklearn.pipeline import Pipeline, make_pipeline
 
@@ -30,7 +30,7 @@ class Models:
 
 class FAME3RModel(Model):
     def __init__(self, preprocessing_steps=[Sanitize()]):
-        super().__init__(preprocessing_steps)
+        super().__init__(list(preprocessing_steps) + [SmilesRoundtrip()])
 
         self._vectorizer = FAME3RVectorizer(radius=5, input="cdpkit").fit()
         self._models: dict[MetabolismSubset, Models] = {}
@@ -98,3 +98,14 @@ class FAME3RModel(Model):
                 "fame_score": fame_score,
                 "shannon_entropy": shannon_entropy,
             }
+
+
+class SmilesRoundtrip(PreprocessingStep):
+    def __init__(self):
+        super().__init__()
+
+    def _preprocess(self, mol: Mol) -> tuple[Mol | None, list[Problem]]:
+        if mol := MolFromSmiles(MolToSmiles(mol)):
+            return mol, []
+        else:
+            return None, [InvalidSmiles()]
