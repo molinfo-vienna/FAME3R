@@ -19,6 +19,7 @@ from CDPL.Chem import (
     FileSDFMoleculeReader,  # pyright:ignore[reportAttributeAccessIssue]
     MolecularGraph,  # pyright:ignore[reportAttributeAccessIssue]
     generateSMILES,  # pyright:ignore[reportAttributeAccessIssue]
+    getName,  # pyright:ignore[reportAttributeAccessIssue]
     getStructureData,  # pyright:ignore[reportAttributeAccessIssue]
     parseSMILES,  # pyright:ignore[reportAttributeAccessIssue]
 )
@@ -46,7 +47,7 @@ from sklearn.pipeline import make_pipeline
 from fame3r import FAME3RScoreEstimator, FAME3RVectorizer
 
 
-def extract_som_labels(mol: MolecularGraph) -> list[tuple[Atom, bool]]:
+def extract_som_labels_and_names(mol: MolecularGraph) -> list[tuple[Atom, bool]]:
     structure_data = {
         entry.header.split("<")[1].split(">")[0]: entry.data
         for entry in getStructureData(mol)
@@ -54,8 +55,9 @@ def extract_som_labels(mol: MolecularGraph) -> list[tuple[Atom, bool]]:
     som_indices = (
         literal_eval(structure_data["soms"]) if "soms" in structure_data else []
     )
+    name = getName(mol)
 
-    return [(atom, atom.index in som_indices) for atom in mol.atoms]
+    return [(atom, atom.index in som_indices, name) for atom in mol.atoms]
 
 
 def read_labeled_atoms_from_sdf(path: PathLike) -> list[tuple[Atom, bool]]:
@@ -64,7 +66,7 @@ def read_labeled_atoms_from_sdf(path: PathLike) -> list[tuple[Atom, bool]]:
     reader = FileSDFMoleculeReader(str(path))
     mol = BasicMolecule()
     while reader.read(mol):
-        results.extend(extract_som_labels(mol))
+        results.extend(extract_som_labels_and_names(mol))
         mol = BasicMolecule()
 
     return results
@@ -76,7 +78,7 @@ def read_labeled_atoms_from_smi(path: PathLike) -> list[tuple[Atom, bool]]:
     for smiles in Path(path).read_text().splitlines():
         mol = parseSMILES(smiles)
         results.extend(
-            (atom, bool(atom.getProperty(AtomProperty.ATOM_MAPPING_ID)))
+            (atom, bool(atom.getProperty(AtomProperty.ATOM_MAPPING_ID)), None)
             for atom in mol.atoms
         )
 
@@ -297,10 +299,8 @@ def predict(
 ):
     atoms = read_labeled_atoms(input_path)
     containing_mol_indices = {
-        object_id: index
-        for index, object_id in enumerate(
-            {atom.molecule.getObjectID(): None for atom, _ in atoms}
-        )
+        atom.molecule.getObjectID(): name
+        for atom, som_label, name in atoms
     }
 
     atom_count = len(atoms)
@@ -308,7 +308,7 @@ def predict(
 
     # Required because CDPKit atom defines __getitem__
     atom_array = np.empty((atom_count, 1), dtype=object)
-    atom_array[:, 0] = [atom for atom, _ in atoms]
+    atom_array[:, 0] = [atom for atom, _, _ in atoms]
 
     classifier = joblib.load(models_path / "random_forest_classifier.joblib")
     clf_pipeline = make_pipeline(
