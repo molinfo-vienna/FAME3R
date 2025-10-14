@@ -19,10 +19,44 @@ module:
       logo: !image logo_vienna.gif
       url: https://www.univie.ac.at/en
 
-  publications: []
+  publications:
+    - title: "FAME 3R: A Fast, Compact, Flexible, and Practical Re-Design of the FAME 3 Model for Predicting Sites of Metabolism"
+      authors:
+        - first_name: Roxane Axel
+          last_name: Jacob
+        - first_name: Leo
+          last_name: Gaskin
+        - first_name: Thomas
+          last_name: Seidel
+        - first_name: Ya
+          last_name: Chen
+        - first_name: Angelica
+          last_name: Mazzolari
+        - first_name: Johannes
+          last_name: Kirchmair
+          email: johannes.kirchmair@univie.ac.at
+      year: 2025
+      journal: ChemRxiv (preprint)
+      doi: 10.26434/chemrxiv-2025-1vnp0
 
   about: |
-    TODO
+    FAME 3R is a suite of random forest models designed to predict both Phase 1 and Phase 2 sites of metabolism (SOMs). SOMs are the atoms where metabolic reactions are initiated, making them the starting points for understanding the metabolic fate of xenobiotic compounds. The source code for FAME 3R is publicly available on GitHub: [https://github.com/molinfo-vienna/FAME3R](https://github.com/molinfo-vienna/FAME3R).
+
+    The FAME 3R models are trained on the MetaQSAR database and are available in four distinct versions, each tailored to specific subsets of metabolic reactions:
+
+    - **Full Training Set**: Includes both Phase 1 and Phase 2 metabolism.
+    - **CYP-Mediated Reactions:** Focuses on reactions mediated by cytochrome P450 enzymes.
+    - **Phase 1-Associated Reactions:** Covers Phase 1 metabolism (mainly redox and hydrolysis reactions).
+    - **Phase 2-Associated Reactions:** Covers Phase 2 metabolism (mainly conjugation reactions).
+
+    These trained models are freely available for non-commercial research purposes via the NERDD platform and can also be downloaded from Zenodo: [https://doi.org/10.5281/zenodo.17223468](https://doi.org/10.5281/zenodo.17223468) for local execution. For-profit institutions require a commercial license from the Università degli Studi di Milano to access the MetaQSAR-derived models.
+
+    FAME 3R incorporates two key metrics for assessing prediction reliability and uncertainty:
+
+    - **FAME Score:** A similarity-based applicability domain score ranging from 0 to 1, where 1 indicates the most reliable predictions.
+    - **Shannon Entropy:** A measure of uncertainty ranging from 0 to 1, with 0 representing the most certain predictions.
+
+    For legacy purposes, the earlier FAME 3 models remain accessible at [https://nerdd.univie.ac.at/fame3](https://nerdd.univie.ac.at/fame3).
 
   job_parameters:
     - name: metabolism_subset
