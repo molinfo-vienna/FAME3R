@@ -2,7 +2,7 @@ module:
   rank: 3
   name: fame3r
   visible_name: FAME3R
-  visible: False
+  visible: True
   logo: !image logo.svg
   logo_title: Sites of Metabolism
   logo_caption: Regioselectivity prediction for phase 1 and phase 2 metabolism
