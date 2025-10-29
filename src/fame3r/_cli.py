@@ -19,6 +19,7 @@ from CDPL.Chem import (
     FileSDFMoleculeReader,  # pyright:ignore[reportAttributeAccessIssue]
     MolecularGraph,  # pyright:ignore[reportAttributeAccessIssue]
     generateSMILES,  # pyright:ignore[reportAttributeAccessIssue]
+    getName,  # pyright:ignore[reportAttributeAccessIssue]
     getStructureData,  # pyright:ignore[reportAttributeAccessIssue]
     parseSMILES,  # pyright:ignore[reportAttributeAccessIssue]
 )
@@ -46,7 +47,7 @@ from sklearn.pipeline import make_pipeline
 from fame3r import FAME3RScoreEstimator, FAME3RVectorizer
 
 
-def extract_som_labels(mol: MolecularGraph) -> list[tuple[Atom, bool]]:
+def extract_som_labels_and_names(mol: MolecularGraph) -> list[tuple[Atom, bool, str]]:
     structure_data = {
         entry.header.split("<")[1].split(">")[0]: entry.data
         for entry in getStructureData(mol)
@@ -54,36 +55,37 @@ def extract_som_labels(mol: MolecularGraph) -> list[tuple[Atom, bool]]:
     som_indices = (
         literal_eval(structure_data["soms"]) if "soms" in structure_data else []
     )
+    name = getName(mol)
 
-    return [(atom, atom.index in som_indices) for atom in mol.atoms]
+    return [(atom, atom.index in som_indices, name) for atom in mol.atoms]
 
 
-def read_labeled_atoms_from_sdf(path: PathLike) -> list[tuple[Atom, bool]]:
+def read_labeled_atoms_from_sdf(path: PathLike) -> list[tuple[Atom, bool, str]]:
     results = []
 
     reader = FileSDFMoleculeReader(str(path))
     mol = BasicMolecule()
     while reader.read(mol):
-        results.extend(extract_som_labels(mol))
+        results.extend(extract_som_labels_and_names(mol))
         mol = BasicMolecule()
 
     return results
 
 
-def read_labeled_atoms_from_smi(path: PathLike) -> list[tuple[Atom, bool]]:
+def read_labeled_atoms_from_smi(path: PathLike) -> list[tuple[Atom, bool, str]]:
     results = []
 
     for smiles in Path(path).read_text().splitlines():
         mol = parseSMILES(smiles)
         results.extend(
-            (atom, bool(atom.getProperty(AtomProperty.ATOM_MAPPING_ID)))
+            (atom, bool(atom.getProperty(AtomProperty.ATOM_MAPPING_ID)), None)
             for atom in mol.atoms
         )
 
     return results
 
 
-def read_labeled_atoms(path: PathLike) -> list[tuple[Atom, bool]]:
+def read_labeled_atoms(path: PathLike) -> list[tuple[Atom, bool, str]]:
     ext = Path(path).suffix
 
     if ext == ".smi":
@@ -185,11 +187,11 @@ def train(
     atoms = read_labeled_atoms(input_path)
 
     atom_count = len(atoms)
-    mol_count = len({atom.molecule.getObjectID() for atom, _ in atoms})
+    mol_count = len({atom.molecule.getObjectID() for atom, _, _ in atoms})
 
     # Required because CDPKit atom defines __getitem__
     atom_array = np.empty((atom_count, 1), dtype=object)
-    atom_array[:, 0] = [atom for atom, _ in atoms]
+    atom_array[:, 0] = [atom for atom, _, _ in atoms]
 
     if "random-forest" in model_kinds:
         hyperparameters = (
@@ -213,7 +215,7 @@ def train(
                 RandomForestClassifier(random_state=42, **hyperparameters),
             ).fit(
                 atom_array,
-                [label for _, label in atoms],
+                [label for _, label, _ in atoms],
             )
 
         models_path.mkdir(exist_ok=True, parents=True)
@@ -232,7 +234,7 @@ def train(
                 FAME3RScoreEstimator(n_neighbors=n_neighbors),
             ).fit(
                 atom_array,
-                [label for _, label in atoms],
+                [label for _, label, _ in atoms],
             )
 
         models_path.mkdir(exist_ok=True, parents=True)
@@ -297,10 +299,7 @@ def predict(
 ):
     atoms = read_labeled_atoms(input_path)
     containing_mol_indices = {
-        object_id: index
-        for index, object_id in enumerate(
-            {atom.molecule.getObjectID(): None for atom, _ in atoms}
-        )
+        atom.molecule.getObjectID(): name for atom, _, name in atoms
     }
 
     atom_count = len(atoms)
@@ -308,7 +307,7 @@ def predict(
 
     # Required because CDPKit atom defines __getitem__
     atom_array = np.empty((atom_count, 1), dtype=object)
-    atom_array[:, 0] = [atom for atom, _ in atoms]
+    atom_array[:, 0] = [atom for atom, _, _ in atoms]
 
     classifier = joblib.load(models_path / "random_forest_classifier.joblib")
     clf_pipeline = make_pipeline(
@@ -520,15 +519,15 @@ def hyperparameters(
 
     atoms = read_labeled_atoms(input_path)
 
-    labels = [label for _, label in atoms]
-    containing_mol_ids = [atom.molecule.getObjectID() for atom, _ in atoms]
+    labels = [label for _, label, _ in atoms]
+    containing_mol_ids = [atom.molecule.getObjectID() for atom, _, _ in atoms]
 
     atom_count = len(atoms)
     mol_count = len(set(containing_mol_ids))
 
     # Required because CDPKit atom defines __getitem__
     atom_array = np.empty((atom_count, 1), dtype=object)
-    atom_array[:, 0] = [atom for atom, _ in atoms]
+    atom_array[:, 0] = [atom for atom, _, _ in atoms]
 
     with Spinner(
         title=f"Computing descriptors for {atom_count} atoms ({mol_count} molecules)"
@@ -611,15 +610,15 @@ def threshold(
 
     atoms = read_labeled_atoms(input_path)
 
-    labels = [label for _, label in atoms]
-    containing_mol_ids = [atom.molecule.getObjectID() for atom, _ in atoms]
+    labels = [label for _, label, _ in atoms]
+    containing_mol_ids = [atom.molecule.getObjectID() for atom, _, _ in atoms]
 
     atom_count = len(atoms)
     mol_count = len(set(containing_mol_ids))
 
     # Required because CDPKit atom defines __getitem__
     atom_array = np.empty((atom_count, 1), dtype=object)
-    atom_array[:, 0] = [atom for atom, _ in atoms]
+    atom_array[:, 0] = [atom for atom, _, _ in atoms]
 
     with Spinner(
         title=f"Computing descriptors for {atom_count} atoms ({mol_count} molecules)"
@@ -694,7 +693,7 @@ def descriptors(
     containing_mol_indices = {
         object_id: index
         for index, object_id in enumerate(
-            {atom.molecule.getObjectID(): None for atom, _ in atoms}
+            {atom.molecule.getObjectID(): None for atom, _, _ in atoms}
         )
     }
 
@@ -703,7 +702,7 @@ def descriptors(
 
     # Required because CDPKit atom defines __getitem__
     atom_array = np.empty((atom_count, 1), dtype=object)
-    atom_array[:, 0] = [atom for atom, _ in atoms]
+    atom_array[:, 0] = [atom for atom, _, _ in atoms]
 
     vectorizer = FAME3RVectorizer(
         radius=radius,

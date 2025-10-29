@@ -129,9 +129,9 @@ def _tanimoto_similarity_matrix(A, B):
     B = np.asarray(B)
 
     intersection = np.matmul(A, B.T)
-    A_sqare_norm = np.sum(A**2, axis=1)
-    B_sqare_norm = np.sum(B**2, axis=1)
-    union = A_sqare_norm[:, None] + B_sqare_norm[None, :] - intersection
+    A_square_norm = np.sum(A**2, axis=1)
+    B_square_norm = np.sum(B**2, axis=1)
+    union = A_square_norm[:, None] + B_square_norm[None, :] - intersection
 
     return np.divide(
         intersection,
