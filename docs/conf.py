@@ -87,6 +87,7 @@ intersphinx_mapping = {
 
 nb_execution_in_temp = False
 nb_execution_timeout = 60 * 30
+nb_execution_mode = "auto"
 
 
 # -- Enable strict reference resolution --------------------------------------
