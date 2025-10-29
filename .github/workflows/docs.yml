@@ -25,7 +25,7 @@ jobs:
       - uses: actions/configure-pages@v5
       - name: Generate Sphinx documentation
         run: |
-           for tag in ${{ github.ref_name }} $(git tag -l "v*"); do
+           for tag in ${{ github.ref_name }} $(git tag -l "v2*"); do
              git checkout "$tag"
              uv --directory docs run sphinx-build -M html . _build/"$tag"
            done
