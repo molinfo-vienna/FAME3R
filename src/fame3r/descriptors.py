@@ -160,7 +160,7 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
         check_is_fitted(self)
 
         if len(X) != 1:
-            ValueError(
+            raise ValueError(
                 f"Found array with {len(X)} feature(s) while 1 feature is required."
             )
 
