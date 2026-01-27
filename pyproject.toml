@@ -26,8 +26,8 @@ cli = [
     "typer>=0.16.0",
 ]
 nerdd = [
-    "nerdd-link>=0.5.0",
-    "nerdd-module>=0.3.42",
+    "nerdd-link>=0.5.15",
+    "nerdd-module>=0.3.52",
 ]
 
 [dependency-groups]
