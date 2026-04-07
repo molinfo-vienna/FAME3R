@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path("..").resolve()))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "FAME3R"
-copyright = "2025, Roxane Jacob, Leo Gaskin"
+copyright = "2025-2026, Roxane Jacob, Leo Gaskin"
 author = "Roxane Jacob, Leo Gaskin"
 
 
