@@ -23,6 +23,11 @@ Documentation
 
 The documentation, including installation instructions, tutorials for using the software, and full Python API documentation can be found online on `GitHub Pages <https://molinfo-vienna.github.io/FAME3R/main/html/>`_.
 
+Models
+******
+
+We provide access to FAME3R SOM classifier models trained on data derived from the proprietary MetaQSAR database. The models are freely available for non-commercial research via our `Zenodo repository <https://zenodo.org/records/17294556>`_.
+
 Citation
 ********
 
