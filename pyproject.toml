@@ -23,7 +23,7 @@ dependencies = [
 
 [project.optional-dependencies]
 cli = [
-    "typer>=0.16.0",
+    "typer>=0.16.0,<0.26.0",
 ]
 nerdd = [
     "nerdd-link>=0.5.15",
