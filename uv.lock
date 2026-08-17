@@ -298,20 +298,26 @@ wheels = [
 
 [[package]]
 name = "cdpkit"
-version = "1.2.3"
+version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "numpy", version = "2.5.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/75/a3/4c0a421cdcb43c6cd7d03353b6ab6e91f653a08333345d2ddd0a9e803eb8/CDPKit-1.2.3.tar.gz", hash = "sha256:f6e0c203335dd7484ac1bfdae0e7dbd29ee9d3b61385b492072e2ba985ee0c78", size = 62693753, upload-time = "2025-03-25T10:37:16.341Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/69/b9/effef587ac08659c280be14b270ea6c8bc90629a17ddecda149b4f8a1ac7/cdpkit-1.3.0.tar.gz", hash = "sha256:75d0623df09e6d64f7386bae1592718a8957f729b5aaf0163f8a6d03badb806a", size = 64285317, upload-time = "2026-04-28T10:06:03.185Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/19/21/54ea669ecf5cc50464aadbef2fbf49ccf2abb7c42ae74ac23f3b0ba0135f/CDPKit-1.2.3-cp311-cp311-macosx_14_0_arm64.whl", hash = "sha256:6af601906c50ab21c53a73882f5882be18bb59523efb5cf9800797f48ffca42e", size = 68458342, upload-time = "2025-03-25T11:00:16.709Z" },
-    { url = "https://files.pythonhosted.org/packages/72/c5/a0690c4a344a7f7a7e07d92d410c04376516ea389c5dc41b71e653f4f731/CDPKit-1.2.3-cp312-cp312-macosx_14_0_arm64.whl", hash = "sha256:f572c09c4ec84d27a77d82a0339650c9a707ab7091ecb0f3e114d79f52a7d4ce", size = 68666278, upload-time = "2025-03-25T11:00:24.084Z" },
-    { url = "https://files.pythonhosted.org/packages/c3/71/2f81611079087526f365cbe0e5c63bf75638859ef392aa53f74a315bf3ca/CDPKit-1.2.3-cp313-cp313-macosx_14_0_arm64.whl", hash = "sha256:b44facd8a684247e3372e4b942ab979db01647eb46601c1b4bf40ee3b5a38c59", size = 68666304, upload-time = "2025-03-25T11:00:32.806Z" },
-    { url = "https://files.pythonhosted.org/packages/0b/af/d7d5983af4cb2766e463f38b4b5d3205fccc8f9514fbf235d962704086ee/cdpkit-1.2.3-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:9e034b5a8c5b49e3a7e5770ade08207824fa5050cafaff16d486dc01772b6fc3", size = 73813504, upload-time = "2025-03-25T11:48:31.011Z" },
-    { url = "https://files.pythonhosted.org/packages/a3/82/25bd89f51be0c869586bf27df61168d3b77cd83f7bba22e71303308757fc/cdpkit-1.2.3-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:ff7d3754c74ff0fe6c2d4d7ea8fd13bd6399e2c6c296eebcff35374ec4841320", size = 73791868, upload-time = "2025-03-25T11:48:38.458Z" },
-    { url = "https://files.pythonhosted.org/packages/d6/c8/f2f3132aa1defe31ff6dd252bfe259b6fe51be3ec06fea5bf31296928bc2/cdpkit-1.2.3-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:e4e7eef5ab0a032ebf60f28c0384c0733167b8ddc5dbb08d69fab77a3bcac1d0", size = 73791984, upload-time = "2025-03-25T11:48:45.742Z" },
+    { url = "https://files.pythonhosted.org/packages/9a/af/da3076e42b4ef7357b5f500f62b689dc14bf5a777cd122f3909ffc045ed3/cdpkit-1.3.0-cp311-cp311-macosx_26_0_arm64.whl", hash = "sha256:850fab660504676182ba8b386a0e747dded8ead8c749134284075bfda6513402", size = 99272402, upload-time = "2026-04-28T11:23:08.358Z" },
+    { url = "https://files.pythonhosted.org/packages/25/18/4aabbea3d40713de49ec8881d221bfd3c0a18cfd366c8b0201730c6af1f8/cdpkit-1.3.0-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:3c0b5474c05105785b7a9c8787169bd1bf853a9891f6aed5e292f07122c86e57", size = 76621657, upload-time = "2026-04-28T10:05:10.393Z" },
+    { url = "https://files.pythonhosted.org/packages/5f/7a/7e774f3a8caf130b78ed7d31cc55bf4b788a3b11c506dc9400e4cbe4dc32/cdpkit-1.3.0-cp312-cp312-macosx_26_0_arm64.whl", hash = "sha256:3aa5cad50ca958a29ca92517a84c776665aa6b67052e95e229f788c50fa16674", size = 99444700, upload-time = "2026-04-28T10:48:37.244Z" },
+    { url = "https://files.pythonhosted.org/packages/53/2d/21f0ed4a2af4ea23121c385fb9dc73c0ef4343e240669d1f9014fd40ac17/cdpkit-1.3.0-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:4e7399c207646d98497515989270a740e003479bf8092e0644e33d19bd64cdac", size = 76592875, upload-time = "2026-04-28T10:05:17.9Z" },
+    { url = "https://files.pythonhosted.org/packages/a4/58/e6d1716303891a27e360f93c0d2fd6291035635886d9e13ba2b92fa30644/cdpkit-1.3.0-cp312-cp312-win_amd64.whl", hash = "sha256:ec6a05e52cd190996aa0aaa30c2670666f6cdb7053ef0f6841db86f1379378e9", size = 61228796, upload-time = "2026-04-28T10:48:43.573Z" },
+    { url = "https://files.pythonhosted.org/packages/c0/a9/6cf01a527d9c6a96418307a96af4277a95d3a4c13e4cfcda83d1dcad7677/cdpkit-1.3.0-cp313-cp313-macosx_26_0_arm64.whl", hash = "sha256:f59306f6a67e02d8bb46b330c2578711a27908681c9d51f342f8188bfb4c77bc", size = 99448972, upload-time = "2026-04-28T11:23:16.158Z" },
+    { url = "https://files.pythonhosted.org/packages/e5/52/c644b330b80ecf6a06e1e73b6f84fde74475be1557dc18ad693fae25f4ec/cdpkit-1.3.0-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:f88e7515612c88a4da83a9f01e6cc662c7a701f52f393fd422ba5f902c60ad01", size = 76592935, upload-time = "2026-04-28T10:05:24.421Z" },
+    { url = "https://files.pythonhosted.org/packages/69/c2/18d096e9621d824ea01dd8f8380f2c7e4666fff1ad81a8e90cb7697b627d/cdpkit-1.3.0-cp313-cp313t-manylinux_2_28_x86_64.whl", hash = "sha256:a3505de3d29e49083feda33cefb107542ca3850f017640a9caadf4a34f231251", size = 76592618, upload-time = "2026-04-28T10:05:30.965Z" },
+    { url = "https://files.pythonhosted.org/packages/82/33/cf632bb59e77285acad64a3ac65f40133ea12473ea7646816b5d85c40b44/cdpkit-1.3.0-cp314-cp314-macosx_26_0_arm64.whl", hash = "sha256:e20512b19ad5823e01163317d066920a9e831a5de0dd2e1f312cf63580258854", size = 99471540, upload-time = "2026-04-28T10:48:51.594Z" },
+    { url = "https://files.pythonhosted.org/packages/eb/f1/183e56fd594e861efaaace71eb172a5f25765675ee886eeb15d1dab6a566/cdpkit-1.3.0-cp314-cp314-manylinux_2_28_x86_64.whl", hash = "sha256:47e296d1b8ddb7ff1ef43dab010d38d7a62b92770f62c9d19b0962bf20e0c9c9", size = 76632425, upload-time = "2026-04-28T10:05:37.266Z" },
+    { url = "https://files.pythonhosted.org/packages/39/ff/cd162451231672bda728bd47efac74d9749a7600d685e64d977f7fe7e40b/cdpkit-1.3.0-cp314-cp314-win_amd64.whl", hash = "sha256:8dd1c527897d760095750fd50a0fd2248be25af55616d9bd0f018b07a47c55a7", size = 61735637, upload-time = "2026-04-28T10:49:02.642Z" },
+    { url = "https://files.pythonhosted.org/packages/14/27/f541ad377c51cb6b8fbdccf511b5632b49925ca7a3347fe65c3f1f8742d0/cdpkit-1.3.0-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:697144d74058b50371e348b164f7dbaffeaf5017098ff89d4dd04a3edd130c72", size = 76592701, upload-time = "2026-04-28T10:05:43.587Z" },
 ]
 
 [[package]]
@@ -791,7 +797,7 @@ tests = [
 
 [package.metadata]
 requires-dist = [
-    { name = "cdpkit", specifier = "==1.2.3" },
+    { name = "cdpkit", specifier = ">=1.2.3,<=1.3.0" },
     { name = "joblib", specifier = "==1.4.2" },
     { name = "nerdd-link", marker = "extra == 'nerdd'", specifier = ">=0.5.15" },
     { name = "nerdd-module", marker = "extra == 'nerdd'", specifier = ">=0.3.52" },
