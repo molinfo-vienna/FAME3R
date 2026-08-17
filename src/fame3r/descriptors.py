@@ -188,7 +188,7 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
             if subset == "fingerprint":
                 descriptors.append(
                     generate_fingerprints(
-                        som_atoms[0], som_atoms[0].molecule, radius=self.radius
+                        som_atoms[0], som_atoms[0].molecule, max_radius=self.radius
                     )
                 )
             if subset == "counts":
@@ -196,7 +196,7 @@ class FAME3RVectorizer(BaseEstimator, TransformerMixin, _SetOutputMixin):
                     generate_fingerprints(
                         som_atoms[0],
                         som_atoms[0].molecule,
-                        radius=self.radius,
+                        max_radius=self.radius,
                         use_counts=True,
                     )
                 )

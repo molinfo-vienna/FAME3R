@@ -36,9 +36,9 @@ SYBYL_ATOM_TYPE_IDX_CDPKIT = [
 ]
 
 
-def generate_fingerprint_names(radius: int, use_counts: bool = False) -> list[str]:
+def generate_fingerprint_names(max_radius: int, use_counts: bool = False) -> list[str]:
     descriptor_names = []
-    for radius in range(radius + 1):
+    for radius in range(max_radius + 1):
         for atom_type in SYBYL_ATOM_TYPE_IDX_CDPKIT:
             if use_counts:
                 descriptor_names.append(
@@ -56,18 +56,18 @@ def generate_fingerprint_names(radius: int, use_counts: bool = False) -> list[st
 def generate_fingerprints(
     ctr_atom: Chem.Atom,
     molgraph: Chem.MolecularGraph,
-    radius: int,
+    max_radius: int,
     use_counts: bool = False,
 ) -> npt.NDArray[np.bool_]:
     # Calculate total descriptor size
-    fingerprints_size = (radius + 1) * len(SYBYL_ATOM_TYPE_IDX_CDPKIT) * 32
+    fingerprints_size = (max_radius + 1) * len(SYBYL_ATOM_TYPE_IDX_CDPKIT) * 32
 
     # Get the chemical environment around the center atom
     env = Chem.Fragment()
-    Chem.getEnvironment(ctr_atom, molgraph, radius, env)
+    Chem.getEnvironment(ctr_atom, molgraph, max_radius, env)
 
     # Count atoms of each type at each distance
-    atom_counts = np.zeros((radius + 1, len(SYBYL_ATOM_TYPE_IDX_CDPKIT)), dtype=int)
+    atom_counts = np.zeros((max_radius + 1, len(SYBYL_ATOM_TYPE_IDX_CDPKIT)), dtype=int)
 
     for atom in env.atoms:
         sybyl_type = Chem.getSybylType(atom)
@@ -79,8 +79,8 @@ def generate_fingerprints(
             continue
 
         sybyl_type_index = SYBYL_ATOM_TYPE_IDX_CDPKIT.index(sybyl_type)
-        radius = Chem.getTopologicalDistance(ctr_atom, atom, molgraph)
-        atom_counts[radius, sybyl_type_index] += 1
+        topo_radius = Chem.getTopologicalDistance(ctr_atom, atom, molgraph)
+        atom_counts[topo_radius, sybyl_type_index] += 1
 
     if use_counts:
         return atom_counts.ravel()
@@ -90,7 +90,7 @@ def generate_fingerprints(
 
     # Generate 32-bit fingerprints for each combination of atom type and distance
     fingerprint_index = 0
-    for radius in range(radius + 1):  # Radius (R0, R1, ..., R5)
+    for radius in range(max_radius + 1):  # Radius (R0, R1, ..., R5)
         for sybyl_type_index in range(len(SYBYL_ATOM_TYPE_IDX_CDPKIT)):  # Atom type
             for bit in range(32):  # Bit position (B0, B1, ..., B31)
                 count = atom_counts[radius, sybyl_type_index]
