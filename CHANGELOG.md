@@ -1,3 +1,19 @@
+## [2.1.0] - 2026-08-17
+
+### Added
+
+- Clearly accessible link to models in README
+
+### Changed
+
+- Added support for `CDPKit` version 1.3.0
+- Improved tracking of molecular identifiers in `fame3r` command
+
+### Fixed
+
+- Fixed theoretical bug in fingerprint generation
+- Incomplete sentence in documentation
+
 ## [2.0.0] - 2025-09-03
 
 ### Added
