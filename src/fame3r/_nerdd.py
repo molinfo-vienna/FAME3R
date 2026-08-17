@@ -1,7 +1,8 @@
 import os
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Literal, cast, get_args
+from typing import Literal, cast, get_args
 
 import joblib
 import numpy as np
@@ -87,7 +88,7 @@ class FAME3RModel(Model):
         else:
             shannon_entropies = np.full_like(predictions, np.nan)
 
-        for (atom, mol_id), probability, fame_score, shannon_entropy in zip(
+        for (atom, mol_id), probability, fame_score_, shannon_entropy_ in zip(
             atoms, predictions, fame_scores, shannon_entropies, strict=True
         ):
             yield {
@@ -95,8 +96,8 @@ class FAME3RModel(Model):
                 "atom_id": atom.index,
                 "prediction": probability,
                 "prediction_binary": probability > THRESHOLD,
-                "fame_score": fame_score,
-                "shannon_entropy": shannon_entropy,
+                "fame_score": fame_score_,
+                "shannon_entropy": shannon_entropy_,
             }
 
 

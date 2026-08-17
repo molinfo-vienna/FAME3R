@@ -73,3 +73,4 @@ typeCheckingMode = "basic"
 
 [tool.ruff.lint]
 extend-select = ["I"]
+ignore = ["B006", "B008"]
