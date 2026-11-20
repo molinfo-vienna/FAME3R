@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.14' and sys_platform == 'win32'",
@@ -815,8 +815,8 @@ tests = [
 requires-dist = [
     { name = "cdpkit", specifier = ">=1.2.3,<=1.3.0" },
     { name = "joblib", specifier = ">=1.4.2" },
-    { name = "nerdd-link", marker = "extra == 'nerdd'", specifier = ">=0.5.15" },
-    { name = "nerdd-module", marker = "extra == 'nerdd'", specifier = ">=0.3.52" },
+    { name = "nerdd-link", marker = "extra == 'nerdd'", specifier = ">=0.7.8" },
+    { name = "nerdd-module", marker = "extra == 'nerdd'", specifier = ">=0.3.59" },
     { name = "numpy", specifier = ">=2.3.2" },
     { name = "scikit-learn", specifier = ">=1.5.1" },
     { name = "typer", marker = "extra == 'cli'", specifier = ">=0.16.0,<0.26.0" },
@@ -1788,7 +1788,7 @@ wheels = [
 
 [[package]]
 name = "nerdd-link"
-version = "0.6.7"
+version = "0.7.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiokafka" },
@@ -1806,9 +1806,9 @@ dependencies = [
     { name = "simplejson" },
     { name = "stringcase" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5b/a1/93f45725b531a798c623df5d724abd14eff36ceb1394db24be23bbff727d/nerdd_link-0.6.7.tar.gz", hash = "sha256:9ec0bfc31e419ed38947c067377a2b7d0c734d16490cfa85275ec62598d09dfb", size = 44405, upload-time = "2026-07-31T05:52:22.112Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/26/fd/4f247e8bcb3b9bc7ce9ff954de61ee7ab23697bba11de3a49d5e78a0b12e/nerdd_link-0.7.8.tar.gz", hash = "sha256:6b06e93f0bb8ccfb082c2a03fa7fdf73dc9574f2280dc534fc6bffa68adfa3fa", size = 56761, upload-time = "2026-11-04T03:40:26.737Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d7/93/e195745a584641b79e6c6f9a40f386f9286a0c5451299e8a7899b0bf0424/nerdd_link-0.6.7-py3-none-any.whl", hash = "sha256:690c3b1a7b90648de34f796269b90f8acd6ae6f37fb50bc1b59fb48a31aaa391", size = 67005, upload-time = "2026-07-31T05:52:20.623Z" },
+    { url = "https://files.pythonhosted.org/packages/18/ee/9e11e0e1d58778044c0276013cd5075d5556748dd0ad437f1974154d83e8/nerdd_link-0.7.8-py3-none-any.whl", hash = "sha256:e1ed8743ebc3ce6feae45ede023d9708d063f1659d6468e4daa4d3af461844f3", size = 76806, upload-time = "2026-11-04T03:40:25.004Z" },
 ]
 
 [[package]]
